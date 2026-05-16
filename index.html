@@ -244,20 +244,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 const SHEET_ID   = '1Frlg1Kcl1SZ9qsC7G0NvcxziGua2wZrCE8LIRpg7CJk';
 const SHEET_NAME = 'Registro de sesión';
 
-// Columnas de tu Google Sheets (ajustá si cambian)
-// A=Fecha, B=Alumno, C=Edad, D=Brazo, E=Tipo
-// F=Drive, G=Reves, H=Saque, I=Volea, J=Resto/Devolucion
-// K=Resistencia, L=Velocidad, M=Agilidad
-// N=Concentracion, O=Actitud, P=Gestion_errores
-// Q=Prom_Tecnica, R=Prom_Fisico, S=Prom_Mentalidad, T=Prom_Total
-// U=Observaciones
+// Columnas de tu Google Sheets — orden exacto de tu hoja
+// A=Fecha Sesion, B=Alumno, C=Tipo de sesión
+// D=Drive, E=Revés, F=Saque, G=Volea, H=Resto
+// I=Resistencia, J=Velocidad, K=Agilidad, L=Fuerza
+// M=Concentración, N=Actitud, O=Gestión errores
+// P=Observación del Profe, Q=Descripción de la Sesión
 const COL = {
-  fecha:0, alumno:1, edad:2, brazo:3, tipo:4,
-  drive:5, reves:6, saque:7, volea:8, resto:9,
-  resistencia:10, velocidad:11, agilidad:12,
-  concentracion:13, actitud:14, errores:15,
-  prom_tec:16, prom_fis:17, prom_men:18, prom_tot:19,
-  obs:20
+  fecha:0, alumno:1, tipo:2,
+  drive:3, reves:4, saque:5, volea:6, resto:7,
+  resistencia:8, velocidad:9, agilidad:10, fuerza:11,
+  concentracion:12, actitud:13, errores:14,
+  obs_profe:15, descripcion:16
 };
 
 const AVATAR_COLORS = [
@@ -323,12 +321,12 @@ function renderPlayerGrid(players) {
     const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
     const playerRows = allRows.filter(r => r[COL.alumno] === name);
-    const age = playerRows[0]?.[COL.edad] || '';
+    const lastTipo = playerRows[playerRows.length-1]?.[COL.tipo] || '';
     return `<button class="player-btn" onclick="selectPlayer('${name.replace(/'/g,"\\'")}')">
       <div class="pb-avatar" style="background:${color};">${initials}</div>
       <div>
         <div class="pb-name">${name}</div>
-        <div class="pb-age">${age ? age+' años' : ''} · ${playerRows.length} sesiones</div>
+        <div class="pb-age">${playerRows.length} sesión${playerRows.length!==1?'es':''}</div>
       </div>
     </button>`;
   }).join('');
@@ -346,14 +344,12 @@ function selectPlayer(name) {
   const idx = [...new Set(allRows.map(r=>r[COL.alumno]))].sort().indexOf(name);
   const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
   const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  const age = playerSessions[0]?.[COL.edad] || '';
-  const brazo = playerSessions[0]?.[COL.brazo] || '';
 
   document.getElementById('h-avatar').style.background = color;
   document.getElementById('h-avatar').textContent = initials;
   document.getElementById('h-name').textContent = name;
   document.getElementById('h-meta').textContent =
-    [age ? age+' años' : '', brazo ? 'Brazo '+brazo : '', playerSessions.length+' sesiones'].filter(Boolean).join(' · ');
+    `${playerSessions.length} sesión${playerSessions.length!==1?'es':''} registradas`;
 
   document.getElementById('landing').style.display = 'none';
   document.getElementById('app').classList.add('visible');
@@ -450,18 +446,32 @@ function buildResumen() {
   const last = playerSessions[playerSessions.length - 1];
   const prev = playerSessions.length > 1 ? playerSessions[playerSessions.length - 2] : null;
 
-  const tec = num(last[COL.prom_tec]) || ((num(last[COL.drive])+num(last[COL.reves])+num(last[COL.saque])+num(last[COL.volea])+num(last[COL.resto]))/5);
-  const fis = num(last[COL.prom_fis]) || ((num(last[COL.resistencia])+num(last[COL.velocidad])+num(last[COL.agilidad]))/3);
-  const men = num(last[COL.prom_men]) || ((num(last[COL.concentracion])+num(last[COL.actitud])+num(last[COL.errores]))/3);
-  const tot = num(last[COL.prom_tot]) || ((tec+fis+men)/3);
+  // Calcular promedios desde valores individuales
+  const calcTec = (s) => {
+    const vals = [num(s[COL.drive]),num(s[COL.reves]),num(s[COL.saque]),num(s[COL.volea]),num(s[COL.resto])].filter(v=>v>0);
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+  };
+  const calcFis = (s) => {
+    const vals = [num(s[COL.resistencia]),num(s[COL.velocidad]),num(s[COL.agilidad]),num(s[COL.fuerza])].filter(v=>v>0);
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+  };
+  const calcMen = (s) => {
+    const vals = [num(s[COL.concentracion]),num(s[COL.actitud]),num(s[COL.errores])].filter(v=>v>0);
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+  };
 
-  const deltaTec = prev ? (tec - (num(prev[COL.prom_tec]) || ((num(prev[COL.drive])+num(prev[COL.reves])+num(prev[COL.saque])+num(prev[COL.volea])+num(prev[COL.resto]))/5))).toFixed(1) : null;
-  const deltaFis = prev ? (fis - (num(prev[COL.prom_fis]) || ((num(prev[COL.resistencia])+num(prev[COL.velocidad])+num(prev[COL.agilidad]))/3))).toFixed(1) : null;
-  const deltaMen = prev ? (men - (num(prev[COL.prom_men]) || ((num(prev[COL.concentracion])+num(prev[COL.actitud])+num(prev[COL.errores]))/3))).toFixed(1) : null;
+  const tec = calcTec(last);
+  const fis = calcFis(last);
+  const men = calcMen(last);
+  const tot = [tec,fis,men].filter(v=>v>0).reduce((a,b)=>a+b,0) / [tec,fis,men].filter(v=>v>0).length;
 
-  const dEl = (d) => d === null ? '' : d > 0
-    ? `<span class="metric-up">↑ +${d}</span>`
-    : d < 0 ? `<span style="color:var(--red);">↓ ${d}</span>`
+  const deltaTec = prev ? (tec - calcTec(prev)).toFixed(1) : null;
+  const deltaFis = prev ? (fis - calcFis(prev)).toFixed(1) : null;
+  const deltaMen = prev ? (men - calcMen(prev)).toFixed(1) : null;
+
+  const dEl = (d) => d === null ? '<span style="color:var(--hint);">primera sesión</span>'
+    : d > 0 ? `<span class="metric-up">↑ +${d} vs anterior</span>`
+    : d < 0 ? `<span style="color:var(--red);">↓ ${d} vs anterior</span>`
     : `<span style="color:var(--hint);">= sin cambio</span>`;
 
   el.innerHTML = `
@@ -489,7 +499,7 @@ function buildResumen() {
     </div>
 
     <div class="card">
-      <div class="card-title">Técnica — última sesión</div>
+      <div class="card-title">Técnica — última sesión (${fmtDate(last[COL.fecha])})</div>
       ${skillRow('Drive', last[COL.drive])}
       ${skillRow('Revés', last[COL.reves])}
       ${skillRow('Saque', last[COL.saque])}
@@ -502,6 +512,7 @@ function buildResumen() {
       ${skillRow('Resistencia', last[COL.resistencia])}
       ${skillRow('Velocidad', last[COL.velocidad])}
       ${skillRow('Agilidad', last[COL.agilidad])}
+      ${skillRow('Fuerza', last[COL.fuerza])}
     </div>
 
     <div class="card">
@@ -511,11 +522,17 @@ function buildResumen() {
       ${skillRow('Gestión errores', last[COL.errores])}
     </div>
 
-    ${last[COL.obs] ? `
+    ${last[COL.descripcion] ? `
     <div class="card">
-      <div class="card-title">Observaciones del coach</div>
+      <div class="card-title">Descripción de la sesión</div>
       <div class="feedback-date">${fmtDate(last[COL.fecha])}</div>
-      <div class="feedback-block">${last[COL.obs]}</div>
+      <div class="feedback-block">${last[COL.descripcion]}</div>
+    </div>` : ''}
+
+    ${last[COL.obs_profe] ? `
+    <div class="card">
+      <div class="card-title">Observación del coach</div>
+      <div class="feedback-block" style="border-color:var(--ball);">${last[COL.obs_profe]}</div>
     </div>` : ''}
   `;
 
@@ -539,14 +556,23 @@ function buildProgreso() {
 
   const labels = playerSessions.map(s => fmtDate(s[COL.fecha]));
 
+  const calcTec = (s) => { const v=[num(s[COL.drive]),num(s[COL.reves]),num(s[COL.saque]),num(s[COL.volea]),num(s[COL.resto])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:null; };
+  const calcFis = (s) => { const v=[num(s[COL.resistencia]),num(s[COL.velocidad]),num(s[COL.agilidad]),num(s[COL.fuerza])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:null; };
+  const calcMen = (s) => { const v=[num(s[COL.concentracion]),num(s[COL.actitud]),num(s[COL.errores])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:null; };
+  const calcTot = (s) => { const v=[calcTec(s),calcFis(s),calcMen(s)].filter(x=>x); return v.length?v.reduce((a,b)=>a+b,0)/v.length:null; };
+
   el.innerHTML = `
     <div class="card">
       <div class="card-title">Evolución técnica</div>
       <div class="chart-wrap"><canvas id="chart-tec" role="img" aria-label="Evolución técnica de ${currentPlayer}">Gráfico de evolución técnica.</canvas></div>
     </div>
     <div class="card">
-      <div class="card-title">Físico y mental</div>
-      <div class="chart-wrap"><canvas id="chart-fisment" role="img" aria-label="Evolución físico y mental">Gráfico físico y mental.</canvas></div>
+      <div class="card-title">Evolución física</div>
+      <div class="chart-wrap"><canvas id="chart-fis" role="img" aria-label="Evolución física">Gráfico físico.</canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Evolución mental</div>
+      <div class="chart-wrap"><canvas id="chart-men" role="img" aria-label="Evolución mental">Gráfico mental.</canvas></div>
     </div>
     <div class="card">
       <div class="card-title">Promedio total por sesión</div>
@@ -557,53 +583,50 @@ function buildProgreso() {
   loadEl.style.display = 'none';
   el.style.display = 'block';
 
-  const chartOpts = (min=0,max=10) => ({
+  const chartOpts = () => ({
     responsive:true, maintainAspectRatio:false,
     plugins:{legend:{display:true,position:'bottom',labels:{color:'#7a7870',font:{size:10},boxWidth:8,padding:10}}},
     scales:{
-      y:{min,max,ticks:{stepSize:2,color:'#b5b2a8',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},
+      y:{min:0,max:10,ticks:{stepSize:2,color:'#b5b2a8',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},
       x:{ticks:{color:'#b5b2a8',font:{size:10},maxRotation:40,autoSkip:true,maxTicksLimit:6},grid:{color:'rgba(0,0,0,0.04)'}}
     }
   });
 
   charts['tec'] = new Chart(document.getElementById('chart-tec'),{
-    type:'line',
-    data:{labels, datasets:[
+    type:'line', data:{labels, datasets:[
       {label:'Drive',data:playerSessions.map(s=>num(s[COL.drive])||null),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,0.06)',tension:0.35,pointRadius:4,spanGaps:true},
       {label:'Revés',data:playerSessions.map(s=>num(s[COL.reves])||null),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,0.06)',tension:0.35,pointRadius:4,spanGaps:true},
       {label:'Saque',data:playerSessions.map(s=>num(s[COL.saque])||null),borderColor:'#2d6a4f',backgroundColor:'rgba(45,106,79,0.06)',tension:0.35,pointRadius:4,spanGaps:true},
-    ]},
-    options:chartOpts()
+      {label:'Volea',data:playerSessions.map(s=>num(s[COL.volea])||null),borderColor:'#b45309',backgroundColor:'rgba(180,83,9,0.06)',tension:0.35,pointRadius:4,spanGaps:true},
+    ]}, options:chartOpts()
   });
 
-  charts['fisment'] = new Chart(document.getElementById('chart-fisment'),{
-    type:'line',
-    data:{labels, datasets:[
-      {label:'Físico',data:playerSessions.map(s=>num(s[COL.prom_fis])||((num(s[COL.resistencia])+num(s[COL.velocidad])+num(s[COL.agilidad]))/3)||null),borderColor:'#2d6a4f',tension:0.35,pointRadius:4,spanGaps:true},
-      {label:'Mental',data:playerSessions.map(s=>num(s[COL.prom_men])||((num(s[COL.concentracion])+num(s[COL.actitud])+num(s[COL.errores]))/3)||null),borderColor:'#7c3aed',tension:0.35,pointRadius:4,spanGaps:true},
-    ]},
-    options:chartOpts()
+  charts['fis'] = new Chart(document.getElementById('chart-fis'),{
+    type:'line', data:{labels, datasets:[
+      {label:'Resistencia',data:playerSessions.map(s=>num(s[COL.resistencia])||null),borderColor:'#2d6a4f',tension:0.35,pointRadius:4,spanGaps:true},
+      {label:'Velocidad',data:playerSessions.map(s=>num(s[COL.velocidad])||null),borderColor:'#2563eb',tension:0.35,pointRadius:4,spanGaps:true},
+      {label:'Agilidad',data:playerSessions.map(s=>num(s[COL.agilidad])||null),borderColor:'#b45309',tension:0.35,pointRadius:4,spanGaps:true},
+      {label:'Fuerza',data:playerSessions.map(s=>num(s[COL.fuerza])||null),borderColor:'#7c3aed',tension:0.35,pointRadius:4,spanGaps:true},
+    ]}, options:chartOpts()
+  });
+
+  charts['men'] = new Chart(document.getElementById('chart-men'),{
+    type:'line', data:{labels, datasets:[
+      {label:'Concentración',data:playerSessions.map(s=>num(s[COL.concentracion])||null),borderColor:'#7c3aed',tension:0.35,pointRadius:4,spanGaps:true},
+      {label:'Actitud',data:playerSessions.map(s=>num(s[COL.actitud])||null),borderColor:'#dc2626',tension:0.35,pointRadius:4,spanGaps:true},
+      {label:'Gestión errores',data:playerSessions.map(s=>num(s[COL.errores])||null),borderColor:'#2563eb',tension:0.35,pointRadius:4,spanGaps:true},
+    ]}, options:chartOpts()
   });
 
   charts['tot'] = new Chart(document.getElementById('chart-tot'),{
     type:'bar',
     data:{labels, datasets:[{
       label:'Promedio total',
-      data:playerSessions.map(s=>{
-        const t=num(s[COL.prom_tot]);
-        if(t>0) return t;
-        const tec=(num(s[COL.drive])+num(s[COL.reves])+num(s[COL.saque])+num(s[COL.volea])+num(s[COL.resto]))/5;
-        const fis=(num(s[COL.resistencia])+num(s[COL.velocidad])+num(s[COL.agilidad]))/3;
-        const men=(num(s[COL.concentracion])+num(s[COL.actitud])+num(s[COL.errores]))/3;
-        return ((tec+fis+men)/3)||null;
-      }),
-      backgroundColor:playerSessions.map(s=>{
-        const t=num(s[COL.prom_tot])||0;
-        return t>=8?'rgba(45,106,79,0.7)':t>=6?'rgba(37,99,235,0.7)':'rgba(180,83,9,0.7)';
-      }),
+      data:playerSessions.map(s=>{ const t=calcTot(s); return t?parseFloat(t.toFixed(1)):null; }),
+      backgroundColor:playerSessions.map(s=>{ const t=calcTot(s)||0; return t>=8?'rgba(45,106,79,0.75)':t>=6?'rgba(37,99,235,0.75)':'rgba(180,83,9,0.75)'; }),
       borderRadius:6,
     }]},
-    options:{...chartOpts(0,10),plugins:{legend:{display:false}}}
+    options:{...chartOpts(),plugins:{legend:{display:false}}}
   });
 }
 
@@ -621,33 +644,40 @@ function buildHistorial() {
     return;
   }
 
+  const calcTec = (s) => { const v=[num(s[COL.drive]),num(s[COL.reves]),num(s[COL.saque]),num(s[COL.volea]),num(s[COL.resto])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; };
+  const calcFis = (s) => { const v=[num(s[COL.resistencia]),num(s[COL.velocidad]),num(s[COL.agilidad]),num(s[COL.fuerza])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; };
+  const calcMen = (s) => { const v=[num(s[COL.concentracion]),num(s[COL.actitud]),num(s[COL.errores])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; };
+
   const sessReversed = [...playerSessions].reverse();
 
   el.innerHTML = `<div class="card">
     <div class="card-title">${playerSessions.length} sesiones registradas</div>
     ${sessReversed.map(s => {
-      const tec = num(s[COL.prom_tec]) || ((num(s[COL.drive])+num(s[COL.reves])+num(s[COL.saque])+num(s[COL.volea])+num(s[COL.resto]))/5);
-      const fis = num(s[COL.prom_fis]) || ((num(s[COL.resistencia])+num(s[COL.velocidad])+num(s[COL.agilidad]))/3);
-      const men = num(s[COL.prom_men]) || ((num(s[COL.concentracion])+num(s[COL.actitud])+num(s[COL.errores]))/3);
-      const dotColor = s[COL.tipo]?.toLowerCase().includes('físic') ? '#2d6a4f'
-        : s[COL.tipo]?.toLowerCase().includes('mental') ? '#7c3aed'
-        : s[COL.tipo]?.toLowerCase().includes('partido') || s[COL.tipo]?.toLowerCase().includes('torneo') ? '#b45309'
+      const tec = calcTec(s);
+      const fis = calcFis(s);
+      const men = calcMen(s);
+      const tipo = s[COL.tipo] || '';
+      const dotColor = tipo.toLowerCase().includes('físic') ? '#2d6a4f'
+        : tipo.toLowerCase().includes('mental') ? '#7c3aed'
+        : tipo.toLowerCase().includes('partido') || tipo.toLowerCase().includes('torneo') ? '#b45309'
         : '#2563eb';
       return `<div class="session-item">
-        <div class="session-dot" style="background:${dotColor};"></div>
+        <div class="session-dot" style="background:${dotColor};margin-top:6px;"></div>
         <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">
-            ${typeBadge(s[COL.tipo])}
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+            ${typeBadge(tipo)}
             <span class="session-date">${fmtDate(s[COL.fecha])}</span>
           </div>
+          ${s[COL.descripcion] ? `<div style="font-size:12px;color:var(--muted);margin-bottom:5px;">${s[COL.descripcion]}</div>` : ''}
           <div class="session-pills">
             ${tec>0?`<span class="session-pill">Téc ${tec.toFixed(1)}</span>`:''}
             ${fis>0?`<span class="session-pill">Fís ${fis.toFixed(1)}</span>`:''}
             ${men>0?`<span class="session-pill">Men ${men.toFixed(1)}</span>`:''}
             ${num(s[COL.drive])>0?`<span class="session-pill">Drive ${num(s[COL.drive]).toFixed(0)}</span>`:''}
+            ${num(s[COL.reves])>0?`<span class="session-pill">Revés ${num(s[COL.reves]).toFixed(0)}</span>`:''}
             ${num(s[COL.saque])>0?`<span class="session-pill">Saque ${num(s[COL.saque]).toFixed(0)}</span>`:''}
           </div>
-          ${s[COL.obs]?`<div class="feedback-block" style="margin-top:8px;font-size:12px;">${s[COL.obs]}</div>`:''}
+          ${s[COL.obs_profe] ? `<div class="feedback-block" style="margin-top:8px;font-size:12px;border-color:var(--ball);">${s[COL.obs_profe]}</div>` : ''}
         </div>
       </div>`;
     }).join('')}
