@@ -3,615 +3,664 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Academia de Tenis — Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Academia de Tenis</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  :root {
-    --bg: #f5f4f0;
-    --surface: #ffffff;
-    --surface2: #f0efe9;
-    --border: rgba(0,0,0,0.08);
-    --text: #1a1a18;
-    --muted: #7a7a72;
-    --hint: #b0b0a8;
-    --accent: #2d6a4f;
-    --accent2: #52b788;
-    --accent-light: #d8f3dc;
-    --warn: #e76f51;
-    --warn-light: #fde8e0;
-    --blue: #3a86ff;
-    --blue-light: #dbeafe;
-    --purple: #6366f1;
-    --purple-light: #ede9fe;
-    --amber: #d97706;
-    --amber-light: #fef3c7;
-    --radius: 14px;
-    --radius-sm: 8px;
-    --font: 'DM Sans', sans-serif;
-    --mono: 'DM Mono', monospace;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+:root {
+  --court: #2d5a1b;
+  --court-light: #3d7a26;
+  --clay: #c2784a;
+  --clay-light: #e8a070;
+  --ball: #c8d42b;
+  --bg: #f7f6f0;
+  --surface: #ffffff;
+  --surface2: #f0ede4;
+  --border: rgba(0,0,0,0.07);
+  --text: #1c1c18;
+  --muted: #7a7870;
+  --hint: #b5b2a8;
+  --green: #2d6a4f;
+  --green-l: #d8f3dc;
+  --blue: #2563eb;
+  --blue-l: #dbeafe;
+  --amber: #b45309;
+  --amber-l: #fef3c7;
+  --red: #dc2626;
+  --red-l: #fee2e2;
+  --purple: #7c3aed;
+  --purple-l: #ede9fe;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-  /* LAYOUT */
-  .app { display: flex; min-height: 100vh; }
-  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-  .main { flex: 1; overflow-x: hidden; }
+/* ── LANDING / SELECT ── */
+.landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden;}
+.landing-bg{position:absolute;inset:0;background:linear-gradient(135deg,#1a3a0e 0%,#2d5a1b 40%,#1c3d2a 100%);z-index:0;}
+.landing-lines{position:absolute;inset:0;opacity:0.08;background-image:repeating-linear-gradient(0deg,transparent,transparent 58px,rgba(255,255,255,0.5) 58px,rgba(255,255,255,0.5) 60px),repeating-linear-gradient(90deg,transparent,transparent 58px,rgba(255,255,255,0.5) 58px,rgba(255,255,255,0.5) 60px);z-index:1;}
+.landing-content{position:relative;z-index:2;text-align:center;max-width:520px;width:100%;}
+.landing-ball{width:52px;height:52px;border-radius:50%;background:var(--ball);margin:0 auto 1.5rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(200,212,43,0.4);}
+.landing-ball svg{width:30px;height:30px;}
+.landing-title{font-family:'Syne',sans-serif;font-size:clamp(28px,6vw,46px);font-weight:700;color:white;line-height:1.1;margin-bottom:8px;}
+.landing-sub{font-size:15px;color:rgba(255,255,255,0.65);margin-bottom:2.5rem;}
+.select-card{background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:1.5rem;width:100%;}
+.select-label{font-size:12px;font-weight:500;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;text-align:left;}
+.player-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.player-btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:10px;text-align:left;}
+.player-btn:hover{background:rgba(255,255,255,0.15);border-color:rgba(200,212,43,0.4);transform:translateY(-1px);}
+.player-btn:active{transform:translateY(0);}
+.pb-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;color:white;}
+.pb-name{font-size:13px;font-weight:500;color:white;line-height:1.2;}
+.pb-age{font-size:11px;color:rgba(255,255,255,0.45);}
+.loading-state{color:rgba(255,255,255,0.6);font-size:13px;padding:1rem;text-align:center;}
 
-  /* SIDEBAR */
-  .sidebar-brand { padding: 20px 20px 16px; border-bottom: 1px solid var(--border); }
-  .brand-name { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
-  .brand-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .sidebar-section { padding: 14px 12px 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--hint); }
-  .player-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; border-radius: var(--radius-sm); margin: 1px 8px; transition: background 0.15s; }
-  .player-item:hover { background: var(--surface2); }
-  .player-item.active { background: var(--accent-light); }
-  .player-item.active .player-item-name { color: var(--accent); font-weight: 500; }
-  .avatar-sm { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
-  .player-item-name { font-size: 13px; color: var(--text); }
-  .player-item-level { font-size: 10px; color: var(--muted); }
-  .sidebar-footer { margin-top: auto; padding: 16px; border-top: 1px solid var(--border); }
-  .coach-btn { width: 100%; padding: 9px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
-  .coach-btn:hover { opacity: 0.88; }
+/* ── APP SHELL ── */
+.app{display:none;min-height:100vh;flex-direction:column;}
+.app.visible{display:flex;}
 
-  /* HEADER */
-  .page-header { padding: 28px 32px 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-  .page-title { font-size: 22px; font-weight: 600; color: var(--text); }
-  .page-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
-  .header-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+/* ── HEADER ── */
+.app-header{background:var(--court);padding:0;position:sticky;top:0;z-index:100;}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0;}
+.header-back{background:rgba(255,255,255,0.1);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;color:white;font-size:12px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;}
+.header-back:hover{background:rgba(255,255,255,0.18);}
+.header-player{display:flex;align-items:center;gap:10px;}
+.header-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:white;flex-shrink:0;}
+.header-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:600;color:white;}
+.header-meta{font-size:11px;color:rgba(255,255,255,0.6);}
+.header-ball{width:28px;height:28px;border-radius:50%;background:var(--ball);display:flex;align-items:center;justify-content:center;}
 
-  /* TABS */
-  .tabs { display: flex; gap: 4px; padding: 20px 32px 0; border-bottom: 1px solid var(--border); }
-  .tab { padding: 8px 16px; font-size: 13px; font-weight: 400; color: var(--muted); cursor: pointer; border: none; background: none; font-family: var(--font); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s; }
-  .tab:hover { color: var(--text); }
-  .tab.active { color: var(--accent); font-weight: 500; border-bottom-color: var(--accent); }
+/* ── TABS ── */
+.app-tabs{display:flex;padding:10px 20px 0;gap:0;overflow-x:auto;scrollbar-width:none;}
+.app-tabs::-webkit-scrollbar{display:none;}
+.tab-btn{padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:400;color:rgba(255,255,255,0.5);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all 0.15s;margin-bottom:0;}
+.tab-btn.active{color:var(--ball);border-bottom-color:var(--ball);font-weight:500;}
+.tab-btn:hover:not(.active){color:rgba(255,255,255,0.8);}
 
-  /* CONTENT */
-  .content { padding: 24px 32px 40px; }
-  .view { display: none; }
-  .view.active { display: block; }
+/* ── CONTENT ── */
+.app-content{flex:1;padding:20px 16px 40px;}
+.tab-view{display:none;}
+.tab-view.active{display:block;}
 
-  /* METRIC CARDS */
-  .metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
-  .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-  .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; }
-  .metric-value { font-size: 26px; font-weight: 600; color: var(--text); margin: 4px 0 2px; line-height: 1; }
-  .metric-sub { font-size: 11px; color: var(--hint); }
-  .metric-up { color: var(--accent2); }
-  .metric-down { color: var(--warn); }
+/* ── METRIC CARDS ── */
+.metrics-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.metric-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:500;}
+.metric-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;color:var(--text);margin:2px 0 1px;line-height:1;}
+.metric-sub{font-size:11px;color:var(--hint);}
+.metric-up{color:var(--green);}
+.metric-full{grid-column:1/-1;}
 
-  /* SECTION CARDS */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-  .card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 16px; }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+/* ── SKILL BARS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+.card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:14px;}
+.skill-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.skill-row:last-child{margin-bottom:0;}
+.skill-name{font-size:13px;color:var(--text);width:100px;flex-shrink:0;}
+.skill-track{flex:1;height:8px;background:var(--surface2);border-radius:99px;overflow:hidden;}
+.skill-fill{height:100%;border-radius:99px;transition:width 0.7s cubic-bezier(0.34,1.2,0.64,1);}
+.skill-score{font-size:12px;font-family:'DM Mono',monospace;font-weight:500;color:var(--muted);width:24px;text-align:right;flex-shrink:0;}
 
-  /* SKILL BARS */
-  .skill-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-  .skill-row:last-child { margin-bottom: 0; }
-  .skill-name { width: 110px; font-size: 13px; color: var(--text); flex-shrink: 0; }
-  .skill-track { flex: 1; height: 7px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
-  .skill-fill { height: 100%; border-radius: 99px; transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
-  .skill-score { font-size: 12px; font-family: var(--mono); font-weight: 500; color: var(--muted); width: 28px; text-align: right; flex-shrink: 0; }
-  .skill-delta { font-size: 10px; width: 28px; text-align: right; flex-shrink: 0; }
+/* ── SESSION LIST ── */
+.session-item{padding:12px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;}
+.session-item:last-child{border-bottom:none;padding-bottom:0;}
+.session-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.session-date{font-size:11px;color:var(--hint);font-family:'DM Mono',monospace;}
+.session-type{font-size:12px;font-weight:500;color:var(--text);margin:2px 0;}
+.session-pills{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.session-pill{font-size:10px;background:var(--surface2);color:var(--muted);padding:2px 7px;border-radius:5px;font-family:'DM Mono',monospace;}
 
-  /* BADGES */
-  .badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 500; }
-  .badge-green { background: var(--accent-light); color: var(--accent); }
-  .badge-blue { background: var(--blue-light); color: var(--blue); }
-  .badge-amber { background: var(--amber-light); color: var(--amber); }
-  .badge-red { background: var(--warn-light); color: var(--warn); }
-  .badge-purple { background: var(--purple-light); color: var(--purple); }
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:500;}
+.badge-green{background:var(--green-l);color:var(--green);}
+.badge-blue{background:var(--blue-l);color:var(--blue);}
+.badge-amber{background:var(--amber-l);color:var(--amber);}
+.badge-red{background:var(--red-l);color:var(--red);}
+.badge-purple{background:var(--purple-l);color:var(--purple);}
 
-  /* SESSION LIST */
-  .session-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .session-item:last-child { border-bottom: none; }
-  .session-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-  .session-date { font-size: 11px; color: var(--hint); font-family: var(--mono); }
-  .session-desc { font-size: 13px; color: var(--text); margin: 2px 0; }
-  .session-scores { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
-  .score-tag { font-size: 11px; color: var(--muted); background: var(--surface2); padding: 2px 7px; border-radius: 5px; font-family: var(--mono); }
+/* ── OBJETIVO ── */
+.obj-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.obj-row:last-child{margin-bottom:0;}
+.obj-label{font-size:12px;color:var(--text);width:130px;flex-shrink:0;}
+.obj-track{flex:1;height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;}
+.obj-fill{height:100%;border-radius:99px;}
+.obj-vals{font-size:11px;font-family:'DM Mono',monospace;color:var(--hint);width:52px;text-align:right;flex-shrink:0;}
 
-  /* FORM */
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .form-group { display: flex; flex-direction: column; gap: 5px; }
-  .form-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
-  .form-input { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 13px; color: var(--text); background: var(--surface); outline: none; transition: border 0.15s; }
-  .form-input:focus { border-color: var(--accent2); }
-  select.form-input { cursor: pointer; }
-  textarea.form-input { resize: vertical; min-height: 70px; }
-  .slider-group { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .slider-label { font-size: 12px; width: 110px; flex-shrink: 0; color: var(--text); }
-  .slider-track { flex: 1; }
-  input[type=range] { width: 100%; accent-color: var(--accent); }
-  .slider-val { font-size: 13px; font-weight: 600; font-family: var(--mono); width: 22px; text-align: right; color: var(--accent); flex-shrink: 0; }
-  .section-divider { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-  .save-btn { background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); padding: 10px 24px; font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; margin-top: 16px; transition: opacity 0.15s; }
-  .save-btn:hover { opacity: 0.88; }
-  .saved-msg { font-size: 12px; color: var(--accent2); margin-left: 10px; display: none; }
+/* ── CHART ── */
+.chart-wrap{position:relative;width:100%;height:220px;}
 
-  /* CHART */
-  .chart-wrap { position: relative; width: 100%; height: 240px; }
+/* ── FEEDBACK ── */
+.feedback-block{background:var(--surface2);border-left:3px solid var(--court-light);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:12px 14px;font-size:13px;color:var(--text);line-height:1.6;}
+.feedback-date{font-size:11px;color:var(--hint);font-family:'DM Mono',monospace;margin-bottom:4px;}
 
-  /* COACH VIEW */
-  .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-  .player-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; cursor: pointer; transition: border-color 0.15s, transform 0.15s; }
-  .player-card:hover { border-color: var(--accent2); transform: translateY(-1px); }
-  .player-card-name { font-size: 14px; font-weight: 500; margin: 10px 0 4px; }
-  .player-card-meta { font-size: 11px; color: var(--muted); }
-  .mini-bars { margin-top: 12px; display: flex; flex-direction: column; gap: 5px; }
-  .mini-bar-row { display: flex; align-items: center; gap: 6px; }
-  .mini-bar-label { font-size: 10px; color: var(--muted); width: 32px; flex-shrink: 0; }
-  .mini-bar-track { flex: 1; height: 4px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
-  .mini-bar-fill { height: 100%; border-radius: 99px; }
-  .mini-bar-val { font-size: 10px; font-family: var(--mono); color: var(--hint); width: 20px; text-align: right; flex-shrink: 0; }
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:2rem;color:var(--hint);font-size:13px;}
 
-  /* FEEDBACK */
-  .feedback-block { background: var(--surface2); border-left: 3px solid var(--accent2); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 12px 14px; font-size: 13px; color: var(--text); line-height: 1.6; }
-  .feedback-date { font-size: 11px; color: var(--hint); margin-bottom: 4px; font-family: var(--mono); }
+/* ── LOADER ── */
+.spinner{width:32px;height:32px;border:3px solid var(--surface2);border-top-color:var(--court);border-radius:50%;animation:spin 0.8s linear infinite;margin:2rem auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-view{text-align:center;padding:3rem 1rem;}
+.loading-view p{font-size:13px;color:var(--muted);margin-top:10px;}
 
-  /* OBJECTIVE */
-  .obj-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .obj-label { font-size: 13px; width: 140px; flex-shrink: 0; }
-  .obj-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
-  .obj-fill { height: 100%; border-radius: 99px; }
-  .obj-vals { font-size: 11px; color: var(--muted); width: 60px; text-align: right; font-family: var(--mono); flex-shrink: 0; }
-
-  /* RESPONSIVE */
-  @media(max-width: 700px) {
-    .sidebar { width: 200px; }
-    .content { padding: 16px; }
-    .page-header { padding: 16px 16px 0; }
-    .tabs { padding: 12px 16px 0; }
-    .two-col { grid-template-columns: 1fr; }
-    .form-grid { grid-template-columns: 1fr; }
-  }
-  @media(max-width: 520px) {
-    .app { flex-direction: column; }
-    .sidebar { width: 100%; height: auto; position: relative; }
-    .sidebar-footer { display: none; }
-  }
+/* ── RESPONSIVE ── */
+@media(min-width:480px){
+  .metrics-row{grid-template-columns:repeat(4,1fr);}
+  .metric-full{grid-column:auto;}
+  .app-content{padding:24px 24px 40px;}
+}
+@media(min-width:700px){
+  .player-grid{grid-template-columns:repeat(3,1fr);}
+  .landing-content{max-width:620px;}
+}
 </style>
 </head>
 <body>
 
-<div class="app">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-name">Academia</div>
-      <div class="brand-sub">Seguimiento competitivo</div>
+<!-- ═══ LANDING ═══ -->
+<div class="landing" id="landing">
+  <div class="landing-bg"></div>
+  <div class="landing-lines"></div>
+  <div class="landing-content">
+    <div class="landing-ball">
+      <svg viewBox="0 0 30 30" fill="none">
+        <circle cx="15" cy="15" r="13" stroke="#1a3a0e" stroke-width="2"/>
+        <path d="M2 15 Q8 8 15 15 Q22 22 28 15" stroke="#1a3a0e" stroke-width="2" fill="none"/>
+      </svg>
     </div>
-    <div class="sidebar-section">Coach</div>
-    <div class="player-item active" onclick="showCoach(this)">
-      <div class="avatar-sm" style="background:#e8f5e9;color:#2d6a4f;font-size:13px;">C</div>
-      <div>
-        <div class="player-item-name">Vista general</div>
-        <div class="player-item-level">Todos los jugadores</div>
+    <div class="landing-title">Academia<br>de Tenis</div>
+    <div class="landing-sub">Seguimiento de rendimiento · Temporada 2026</div>
+    <div class="select-card">
+      <div class="select-label">Seleccioná tu nombre para ver tu rendimiento</div>
+      <div class="player-grid" id="player-grid">
+        <div class="loading-state">Cargando jugadores...</div>
       </div>
     </div>
-    <div class="sidebar-section">Jugadores</div>
-    <div id="player-list"></div>
-    <div class="sidebar-footer">
-      <button class="coach-btn" onclick="showView('registrar-tab')">+ Registrar sesión</button>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div class="app" id="app">
+  <header class="app-header">
+    <div class="header-top">
+      <button class="header-back" onclick="goBack()">← Volver</button>
+      <div class="header-player">
+        <div class="header-avatar" id="h-avatar"></div>
+        <div>
+          <div class="header-name" id="h-name"></div>
+          <div class="header-meta" id="h-meta"></div>
+        </div>
+      </div>
+      <div class="header-ball">
+        <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
+          <circle cx="10" cy="10" r="8" stroke="#1a3a0e" stroke-width="1.5"/>
+          <path d="M2 10 Q6 5 10 10 Q14 15 18 10" stroke="#1a3a0e" stroke-width="1.5" fill="none"/>
+        </svg>
+      </div>
     </div>
-  </aside>
+    <nav class="app-tabs">
+      <button class="tab-btn active" onclick="switchTab('resumen',this)">Resumen</button>
+      <button class="tab-btn" onclick="switchTab('progreso',this)">Progreso</button>
+      <button class="tab-btn" onclick="switchTab('historial',this)">Historial</button>
+    </nav>
+  </header>
 
-  <!-- MAIN -->
-  <main class="main" id="main-content">
-    <!-- Coach overview rendered by JS -->
+  <main class="app-content">
+
+    <!-- RESUMEN -->
+    <div class="tab-view active" id="tab-resumen">
+      <div class="loading-view" id="loading-resumen">
+        <div class="spinner"></div>
+        <p>Cargando datos...</p>
+      </div>
+      <div id="content-resumen" style="display:none;"></div>
+    </div>
+
+    <!-- PROGRESO -->
+    <div class="tab-view" id="tab-progreso">
+      <div class="loading-view" id="loading-progreso">
+        <div class="spinner"></div>
+        <p>Cargando evolución...</p>
+      </div>
+      <div id="content-progreso" style="display:none;"></div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="tab-view" id="tab-historial">
+      <div class="loading-view" id="loading-historial">
+        <div class="spinner"></div>
+        <p>Cargando historial...</p>
+      </div>
+      <div id="content-historial" style="display:none;"></div>
+    </div>
+
   </main>
-
 </div>
 
 <script>
-const AVATARS = ['#dbeafe:#3a86ff','#d8f3dc:#2d6a4f','#ede9fe:#6366f1','#fde8e0:#e76f51','#fef3c7:#d97706','#fce7f3:#db2777','#e0f2fe:#0284c7'];
+// ══════════════════════════════════════
+// CONFIGURACIÓN — EDITÁ SOLO ESTO
+// ══════════════════════════════════════
+const SHEET_ID   = '1Frlg1Kcl1SZ9qsC7G0NvcxziGua2wZrCE8LIRpg7CJk';
+const SHEET_NAME = 'Registro de sesión';
 
-const players = [
-  { id:1, name:'Joaquin B.', age:12, initials:'JB', color:AVATARS[0],
-    sessions:[
-      {date:'2025-03-10',type:'tec',desc:'Trabajo de drive profundo y posición de base.',feedback:'Buena predisposición. Mejorar follow-through.',drive:6,reves:5,saque:6,volea:4,resto:5,res:6,vel:6,agi:6,con:7,act:8,err:5},
-      {date:'2025-03-20',type:'fis',desc:'Circuito de velocidad y agilidad lateral.',feedback:'Gran esfuerzo físico. Recuperar posición central más rápido.',drive:6,reves:5,saque:6,volea:4,resto:5,res:7,vel:7,agi:7,con:7,act:8,err:6},
-      {date:'2025-04-02',type:'tec',desc:'Revés cruzado bajo presión.',feedback:'El revés mejoró. Preparación temprana clave.',drive:7,reves:6,saque:6,volea:5,resto:6,res:7,vel:7,agi:7,con:7,act:8,err:6},
-      {date:'2025-04-15',type:'par',desc:'Partido vs nivel similar.',feedback:'Actitud competitiva excelente. Bajar errores no forzados.',drive:7,reves:6,saque:7,volea:5,resto:6,res:7,vel:7,agi:7,con:7,act:9,err:5},
-      {date:'2025-04-28',type:'tec',desc:'Saque y posicionamiento en la T.',feedback:'Saque con más consistencia. Seguir con el ritual pre-punto.',drive:7,reves:6,saque:7,volea:5,resto:6,res:7,vel:7,agi:8,con:8,act:9,err:7},
-    ],
-    objetivo:'Revés cruzado a 7 · Drive sostenido 8',
-    objs:[{label:'Revés cruzado',actual:6,meta:7},{label:'Drive profundo',actual:7,meta:8},{label:'Mental',actual:8,meta:9}]
-  },
-  { id:2, name:'Valentina B.', age:11, initials:'VB', color:AVATARS[1],
-    sessions:[
-      {date:'2025-03-12',type:'tec',desc:'Drive y posición de espera.',feedback:'Muy concentrada. Seguir con el footwork.',drive:7,reves:6,saque:5,volea:5,resto:6,res:6,vel:7,agi:7,con:8,act:8,err:7},
-      {date:'2025-03-22',type:'men',desc:'Rutina de visualización pre-partido.',feedback:'Excelente actitud mental. Punto fuerte de la jugadora.',drive:7,reves:6,saque:5,volea:5,resto:6,res:6,vel:7,agi:7,con:9,act:9,err:8},
-      {date:'2025-04-05',type:'tec',desc:'Saque plano y con efecto.',feedback:'Buena coordinación en el saque. Más velocidad de brazo.',drive:7,reves:7,saque:6,volea:5,resto:7,res:7,vel:7,agi:8,con:9,act:9,err:8},
-      {date:'2025-04-20',type:'par',desc:'Partido de práctica.',feedback:'Dominó desde el fondo. Subir a la red con más decisión.',drive:8,reves:7,saque:6,volea:5,resto:7,res:7,vel:7,agi:8,con:9,act:9,err:7},
-    ],
-    objetivo:'Saque a 7 · Volea definida',
-    objs:[{label:'Saque',actual:6,meta:7},{label:'Volea',actual:5,meta:7},{label:'Concentración',actual:9,meta:10}]
-  },
-  { id:3, name:'Delfina C.', age:12, initials:'DC', color:AVATARS[2],
-    sessions:[
-      {date:'2025-03-15',type:'fis',desc:'Resistencia y velocidad de base.',feedback:'Necesita trabajar la resistencia aeróbica.',drive:5,reves:5,saque:5,volea:4,resto:5,res:5,vel:6,agi:6,con:6,act:7,err:5},
-      {date:'2025-03-28',type:'tec',desc:'Drive y revés con pelota larga.',feedback:'Buena actitud. Focalizar en la preparación del revés.',drive:6,reves:5,saque:5,volea:4,resto:5,res:5,vel:6,agi:6,con:6,act:7,err:6},
-      {date:'2025-04-10',type:'tec',desc:'Trabajo de angles y diagonales.',feedback:'Progreso visible en drive diagonal. Continuar.',drive:6,reves:6,saque:5,volea:4,resto:5,res:6,vel:6,agi:7,con:7,act:7,err:6},
-      {date:'2025-04-25',type:'par',desc:'Partido de práctica corto.',feedback:'Buen ritmo de peloteo. Trabajar decisión en puntos clave.',drive:6,reves:6,saque:5,volea:4,resto:6,res:6,vel:6,agi:7,con:7,act:7,err:6},
-    ],
-    objetivo:'Revés consistente a 7 · Resistencia 7',
-    objs:[{label:'Revés',actual:6,meta:7},{label:'Resistencia',actual:6,meta:7},{label:'Decisión',actual:6,meta:8}]
-  },
-  { id:4, name:'Bautista G.', age:13, initials:'BG', color:AVATARS[3],
-    sessions:[
-      {date:'2025-03-08',type:'tec',desc:'Saque y segundo servicio.',feedback:'Potencia en el saque. Trabajar consistencia del segundo.',drive:7,reves:6,saque:7,volea:6,resto:6,res:7,vel:8,agi:7,con:6,act:7,err:5},
-      {date:'2025-03-18',type:'par',desc:'Partido completo con set.',feedback:'Nivel físico bueno. Gestión de errores a mejorar.',drive:7,reves:6,saque:7,volea:6,resto:6,res:8,vel:8,agi:7,con:6,act:7,err:5},
-      {date:'2025-04-01',type:'men',desc:'Control emocional en puntos decisivos.',feedback:'Avance en la gestión mental. El ritual pre-punto ayuda.',drive:7,reves:6,saque:7,volea:6,resto:6,res:8,vel:8,agi:7,con:7,act:8,err:7},
-      {date:'2025-04-14',type:'tec',desc:'Volea y approach shot.',feedback:'Muy buena volea de derecha. Trabajar la de revés.',drive:7,reves:7,saque:8,volea:7,resto:6,res:8,vel:8,agi:7,con:7,act:8,err:7},
-      {date:'2025-04-28',type:'fis',desc:'Explosividad y velocidad en cancha.',feedback:'Físico excelente. Aprovechar para trabajar juego en red.',drive:8,reves:7,saque:8,volea:7,resto:7,res:8,vel:9,agi:8,con:7,act:8,err:7},
-    ],
-    objetivo:'Saque a 9 · Gestión mental 8',
-    objs:[{label:'Saque',actual:8,meta:9},{label:'Gestión errores',actual:7,meta:8},{label:'Volea revés',actual:7,meta:8}]
-  },
-  { id:5, name:'Fausto B.', age:12, initials:'FB', color:AVATARS[4],
-    sessions:[
-      {date:'2025-03-14',type:'tec',desc:'Drive y posicionamiento táctico.',feedback:'Entiende bien el juego. Falta velocidad de pies.',drive:6,reves:5,saque:6,volea:4,resto:5,res:5,vel:5,agi:5,con:7,act:7,err:6},
-      {date:'2025-03-25',type:'fis',desc:'Trabajo de piernas y sprint corto.',feedback:'Buena respuesta al trabajo físico. Continuar.',drive:6,reves:5,saque:6,volea:4,resto:5,res:6,vel:6,agi:6,con:7,act:7,err:6},
-      {date:'2025-04-08',type:'tec',desc:'Revés y cambio de ritmo.',feedback:'El revés está mejorando. Más agresividad en el approach.',drive:6,reves:6,saque:6,volea:5,resto:6,res:6,vel:6,agi:6,con:7,act:7,err:6},
-      {date:'2025-04-22',type:'par',desc:'Partido de práctica.',feedback:'Buena lectura del juego. Velocidad a mejorar.',drive:7,reves:6,saque:6,volea:5,resto:6,res:6,vel:6,agi:6,con:7,act:8,err:7},
-    ],
-    objetivo:'Velocidad 7 · Agresividad táctica',
-    objs:[{label:'Velocidad',actual:6,meta:7},{label:'Revés',actual:6,meta:7},{label:'Agresividad',actual:6,meta:8}]
-  },
-  { id:6, name:'Tomas V.', age:13, initials:'TV', color:AVATARS[5],
-    sessions:[
-      {date:'2025-03-11',type:'tec',desc:'Drive paralelo y diagonal.',feedback:'Drive sólido. Su golpe más fuerte. Trabajar el revés.',drive:8,reves:5,saque:6,volea:5,resto:6,res:7,vel:7,agi:7,con:7,act:8,err:6},
-      {date:'2025-03-21',type:'tec',desc:'Revés a dos manos.',feedback:'El revés mejora. Preparación más temprana.',drive:8,reves:6,saque:6,volea:5,resto:6,res:7,vel:7,agi:7,con:7,act:8,err:6},
-      {date:'2025-04-03',type:'par',desc:'Partido de práctica.',feedback:'Usó bien el drive. Necesita equilibrar con el revés.',drive:8,reves:6,saque:7,volea:5,resto:6,res:7,vel:7,agi:7,con:7,act:8,err:6},
-      {date:'2025-04-17',type:'men',desc:'Gestión de presión en puntos clave.',feedback:'Muy buena actitud bajo presión. Sigue creciendo.',drive:8,reves:7,saque:7,volea:5,resto:6,res:7,vel:7,agi:7,con:8,act:9,err:7},
-      {date:'2025-04-29',type:'tec',desc:'Volea y subida a la red.',feedback:'Le gusta la red. Trabajar la volea de revés.',drive:8,reves:7,saque:7,volea:6,resto:7,res:7,vel:7,agi:8,con:8,act:9,err:7},
-    ],
-    objetivo:'Revés a 8 · Volea de red 7',
-    objs:[{label:'Revés',actual:7,meta:8},{label:'Volea',actual:6,meta:7},{label:'Presión',actual:8,meta:9}]
-  },
-  { id:7, name:'Felipe M.', age:11, initials:'FM', color:AVATARS[6],
-    sessions:[
-      {date:'2025-03-13',type:'tec',desc:'Técnica básica de drive y revés.',feedback:'Gran actitud de aprendizaje. Bases bien asimiladas.',drive:5,reves:5,saque:4,volea:3,resto:4,res:5,vel:6,agi:6,con:7,act:9,err:7},
-      {date:'2025-03-24',type:'fis',desc:'Coordinación y movimiento básico.',feedback:'Coordinación natural buena. Potencial físico alto.',drive:5,reves:5,saque:5,volea:3,resto:4,res:6,vel:6,agi:7,con:7,act:9,err:7},
-      {date:'2025-04-07',type:'tec',desc:'Saque y posicionamiento.',feedback:'Aprende muy rápido. Talento natural visible.',drive:6,reves:5,saque:5,volea:4,resto:5,res:6,vel:7,agi:7,con:7,act:9,err:7},
-      {date:'2025-04-21',type:'par',desc:'Primeros puntos de práctica.',feedback:'Disfrutó mucho la competencia. Eso es lo más importante.',drive:6,reves:5,saque:5,volea:4,resto:5,res:6,vel:7,agi:7,con:8,act:10,err:7},
-    ],
-    objetivo:'Consolidar técnica base · Saque a 6',
-    objs:[{label:'Drive',actual:6,meta:7},{label:'Saque',actual:5,meta:6},{label:'Actitud',actual:10,meta:10}]
-  },
+// Columnas de tu Google Sheets (ajustá si cambian)
+// A=Fecha, B=Alumno, C=Edad, D=Brazo, E=Tipo
+// F=Drive, G=Reves, H=Saque, I=Volea, J=Resto/Devolucion
+// K=Resistencia, L=Velocidad, M=Agilidad
+// N=Concentracion, O=Actitud, P=Gestion_errores
+// Q=Prom_Tecnica, R=Prom_Fisico, S=Prom_Mentalidad, T=Prom_Total
+// U=Observaciones
+const COL = {
+  fecha:0, alumno:1, edad:2, brazo:3, tipo:4,
+  drive:5, reves:6, saque:7, volea:8, resto:9,
+  resistencia:10, velocidad:11, agilidad:12,
+  concentracion:13, actitud:14, errores:15,
+  prom_tec:16, prom_fis:17, prom_men:18, prom_tot:19,
+  obs:20
+};
+
+const AVATAR_COLORS = [
+  '#2d5a1b','#c2784a','#2563eb','#7c3aed',
+  '#b45309','#dc2626','#0891b2','#059669'
 ];
 
-function getAvgTec(s) { return +((s.drive+s.reves+s.saque+s.volea+s.resto)/5).toFixed(1); }
-function getAvgFis(s) { return +((s.res+s.vel+s.agi)/3).toFixed(1); }
-function getAvgMen(s) { return +((s.con+s.act+s.err)/3).toFixed(1); }
-function getLastSession(p) { return p.sessions[p.sessions.length-1]; }
-function getAvatarColors(c) { const parts=c.split(':'); return {bg:parts[0],fg:parts[1]}; }
-function getTypeBadge(t) {
-  const m={tec:'badge-blue Técnica',fis:'badge-green Física',par:'badge-amber Partido',men:'badge-purple Mental'};
-  const v=m[t]||'badge-blue Sesión'; const parts=v.split(' ');
-  return `<span class="badge ${parts[0]}">${parts[1]}</span>`;
-}
-
+// ══════════════════════════════════════
+// ESTADO GLOBAL
+// ══════════════════════════════════════
+let allRows = [];
 let currentPlayer = null;
-let chartInstance = null;
+let playerSessions = [];
+let charts = {};
 
-function buildSidebar() {
-  const list = document.getElementById('player-list');
-  list.innerHTML = players.map(p => {
-    const c = getAvatarColors(p.color);
-    const last = getLastSession(p);
-    const tec = getAvgTec(last);
-    return `<div class="player-item" onclick="showPlayer(${p.id}, this)">
-      <div class="avatar-sm" style="background:${c.bg};color:${c.fg};">${p.initials}</div>
-      <div>
-        <div class="player-item-name">${p.name}</div>
-        <div class="player-item-level">${p.age} años · Tec ${tec}</div>
-      </div>
-    </div>`;
-  }).join('');
+// ══════════════════════════════════════
+// FETCH GOOGLE SHEETS (CSV público)
+// ══════════════════════════════════════
+async function fetchSheetData() {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('No se pudo conectar con la planilla');
+  const text = await res.text();
+  return parseCSV(text);
 }
 
-function showCoach(el) {
-  document.querySelectorAll('.player-item').forEach(i=>i.classList.remove('active'));
-  el.classList.add('active');
-  currentPlayer = null;
-  renderCoachView();
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  return lines.slice(1).map(line => {
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let ch of line) {
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    cols.push(cur.trim());
+    return cols;
+  }).filter(r => r[COL.alumno] && r[COL.alumno].length > 0);
 }
 
-function renderCoachView() {
-  const main = document.getElementById('main-content');
-  main.innerHTML = `
-    <div class="page-header">
-      <div>
-        <div class="page-title">Vista general</div>
-        <div class="page-meta">7 jugadores activos · Temporada 2025</div>
-      </div>
-    </div>
-    <div class="content">
-      <div class="metrics-row">
-        <div class="metric-card">
-          <div class="metric-label">Jugadores</div>
-          <div class="metric-value">7</div>
-          <div class="metric-sub">activos este mes</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Sesiones totales</div>
-          <div class="metric-value">${players.reduce((s,p)=>s+p.sessions.length,0)}</div>
-          <div class="metric-sub">registradas</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Promedio técnico</div>
-          <div class="metric-value">${(players.reduce((s,p)=>s+getAvgTec(getLastSession(p)),0)/players.length).toFixed(1)}</div>
-          <div class="metric-sub metric-up">grupo general</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Mejor actitud</div>
-          <div class="metric-value" style="font-size:16px;">${players.sort((a,b)=>getLastSession(b).act-getLastSession(a).act)[0].name.split(' ')[0]}</div>
-          <div class="metric-sub">esta semana</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Todos los jugadores</div>
-        <div class="players-grid" id="players-grid"></div>
-      </div>
-    </div>`;
-
-  const grid = document.getElementById('players-grid');
-  grid.innerHTML = players.map(p => {
-    const c = getAvatarColors(p.color);
-    const last = getLastSession(p);
-    const tec = getAvgTec(last);
-    const fis = getAvgFis(last);
-    const men = getAvgMen(last);
-    return `<div class="player-card" onclick="showPlayer(${p.id}, null)">
-      <div class="avatar-sm" style="background:${c.bg};color:${c.fg};width:36px;height:36px;font-size:13px;">${p.initials}</div>
-      <div class="player-card-name">${p.name}</div>
-      <div class="player-card-meta">${p.age} años · ${p.sessions.length} sesiones</div>
-      <div class="mini-bars">
-        <div class="mini-bar-row"><span class="mini-bar-label">Téc</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${tec*10}%;background:#3a86ff;"></div></div><span class="mini-bar-val">${tec}</span></div>
-        <div class="mini-bar-row"><span class="mini-bar-label">Fís</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${fis*10}%;background:#2d6a4f;"></div></div><span class="mini-bar-val">${fis}</span></div>
-        <div class="mini-bar-row"><span class="mini-bar-label">Men</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${men*10}%;background:#6366f1;"></div></div><span class="mini-bar-val">${men}</span></div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function showPlayer(id, sidebarEl) {
-  currentPlayer = players.find(p=>p.id===id);
-  document.querySelectorAll('.player-item').forEach(i=>i.classList.remove('active'));
-  if(sidebarEl) sidebarEl.classList.add('active');
-  else {
-    const items = document.querySelectorAll('.player-item');
-    items.forEach(item => { if(item.textContent.includes(currentPlayer.name.split(' ')[0])) item.classList.add('active'); });
+// ══════════════════════════════════════
+// INIT — CARGA JUGADORES EN LANDING
+// ══════════════════════════════════════
+async function init() {
+  try {
+    allRows = await fetchSheetData();
+    const players = [...new Set(allRows.map(r => r[COL.alumno]))].filter(Boolean).sort();
+    renderPlayerGrid(players);
+  } catch(e) {
+    document.getElementById('player-grid').innerHTML =
+      `<div class="loading-state" style="grid-column:1/-1;color:#ffaaaa;">Error al conectar con la planilla.<br><small>${e.message}</small></div>`;
   }
-  renderPlayerView('resumen');
 }
 
-function renderPlayerView(tab) {
-  const p = currentPlayer;
-  const c = getAvatarColors(p.color);
-  const last = getLastSession(p);
-  const main = document.getElementById('main-content');
-  main.innerHTML = `
-    <div class="page-header">
+function renderPlayerGrid(players) {
+  const grid = document.getElementById('player-grid');
+  if (!players.length) {
+    grid.innerHTML = '<div class="loading-state">No hay jugadores cargados aún.</div>';
+    return;
+  }
+  grid.innerHTML = players.map((name, i) => {
+    const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+    const playerRows = allRows.filter(r => r[COL.alumno] === name);
+    const age = playerRows[0]?.[COL.edad] || '';
+    return `<button class="player-btn" onclick="selectPlayer('${name.replace(/'/g,"\\'")}')">
+      <div class="pb-avatar" style="background:${color};">${initials}</div>
       <div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div class="avatar-sm" style="background:${c.bg};color:${c.fg};width:44px;height:44px;font-size:15px;">${p.initials}</div>
-          <div>
-            <div class="page-title">${p.name}</div>
-            <div class="page-meta">${p.age} años · Nivel competitivo · ${p.sessions.length} sesiones registradas</div>
-          </div>
-        </div>
-        <div class="header-badges" style="margin-top:10px;">
-          <span class="badge badge-green">Activo</span>
-          <span class="badge badge-blue">${p.objetivo}</span>
-        </div>
+        <div class="pb-name">${name}</div>
+        <div class="pb-age">${age ? age+' años' : ''} · ${playerRows.length} sesiones</div>
       </div>
-    </div>
-    <nav class="tabs">
-      <button class="tab ${tab==='resumen'?'active':''}" onclick="renderPlayerView('resumen')">Resumen</button>
-      <button class="tab ${tab==='progreso'?'active':''}" onclick="renderPlayerView('progreso')">Progreso</button>
-      <button class="tab ${tab==='historial'?'active':''}" onclick="renderPlayerView('historial')">Historial</button>
-      <button class="tab ${tab==='registrar'?'active':''}" onclick="renderPlayerView('registrar')">+ Sesión</button>
-    </nav>
-    <div class="content" id="tab-content"></div>`;
-
-  const content = document.getElementById('tab-content');
-  if(tab==='resumen') renderResumen(p, last, content);
-  if(tab==='progreso') renderProgreso(p, content);
-  if(tab==='historial') renderHistorial(p, content);
-  if(tab==='registrar') renderRegistrar(p, content);
+    </button>`;
+  }).join('');
 }
 
-function renderResumen(p, last, el) {
-  const tec = getAvgTec(last);
-  const fis = getAvgFis(last);
-  const men = getAvgMen(last);
-  const prev = p.sessions.length > 1 ? p.sessions[p.sessions.length-2] : last;
-  const tecD = (tec - getAvgTec(prev)).toFixed(1);
-  const fisD = (fis - getAvgFis(prev)).toFixed(1);
-  const menD = (men - getAvgMen(prev)).toFixed(1);
-  const delta = v => v > 0 ? `<span class="metric-up">+${v}</span>` : v < 0 ? `<span class="metric-down">${v}</span>` : `<span style="color:var(--hint)">—</span>`;
+// ══════════════════════════════════════
+// SELECCIONAR JUGADOR
+// ══════════════════════════════════════
+function selectPlayer(name) {
+  currentPlayer = name;
+  playerSessions = allRows
+    .filter(r => r[COL.alumno] === name)
+    .sort((a,b) => new Date(parseDate(a[COL.fecha])) - new Date(parseDate(b[COL.fecha])));
 
-  const skillColor = v => v>=8?'#2d6a4f':v>=6?'#3a86ff':v>=4?'#d97706':'#e76f51';
-  const skillRow = (name, val, prev) => {
-    const d = val-prev; const dc = d>0?'metric-up':d<0?'metric-down':'';
-    return `<div class="skill-row">
-      <span class="skill-name">${name}</span>
-      <div class="skill-track"><div class="skill-fill" style="width:${val*10}%;background:${skillColor(val)};"></div></div>
-      <span class="skill-score">${val}</span>
-      <span class="skill-delta ${dc}">${d>0?'+'+d:d<0?d:''}</span>
-    </div>`;
+  const idx = [...new Set(allRows.map(r=>r[COL.alumno]))].sort().indexOf(name);
+  const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const age = playerSessions[0]?.[COL.edad] || '';
+  const brazo = playerSessions[0]?.[COL.brazo] || '';
+
+  document.getElementById('h-avatar').style.background = color;
+  document.getElementById('h-avatar').textContent = initials;
+  document.getElementById('h-name').textContent = name;
+  document.getElementById('h-meta').textContent =
+    [age ? age+' años' : '', brazo ? 'Brazo '+brazo : '', playerSessions.length+' sesiones'].filter(Boolean).join(' · ');
+
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+
+  // Reset tabs
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.tab-btn').classList.add('active');
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('tab-resumen').classList.add('active');
+
+  // Destroy old charts
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
+  charts = {};
+
+  buildResumen();
+  buildProgreso();
+  buildHistorial();
+}
+
+function goBack() {
+  document.getElementById('landing').style.display = '';
+  document.getElementById('app').classList.remove('visible');
+  currentPlayer = null;
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+function parseDate(str) {
+  if (!str) return null;
+  // handle dd/mm/yyyy or yyyy-mm-dd
+  const parts = str.split('/');
+  if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+  return str;
+}
+
+function fmtDate(str) {
+  const d = new Date(parseDate(str)+'T12:00:00');
+  if (isNaN(d)) return str;
+  return d.toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function num(v) { return parseFloat((v+'').replace(',','.')) || 0; }
+
+function skillColor(v) {
+  if (v >= 8) return '#2d6a4f';
+  if (v >= 6) return '#2563eb';
+  if (v >= 4) return '#b45309';
+  return '#dc2626';
+}
+
+function typeBadge(t) {
+  const map = {
+    'Entrenamiento técnico':'badge-blue','Técnica':'badge-blue',
+    'Entrenamiento físico':'badge-green','Física':'badge-green','Físico':'badge-green',
+    'Partido':'badge-amber','Partido de práctica':'badge-amber',
+    'Mental':'badge-purple','Trabajo mental':'badge-purple',
+    'Torneo':'badge-red'
   };
+  const cls = map[t] || 'badge-blue';
+  return `<span class="badge ${cls}">${t || 'Sesión'}</span>`;
+}
+
+function skillRow(name, val) {
+  const v = num(val);
+  return `<div class="skill-row">
+    <span class="skill-name">${name}</span>
+    <div class="skill-track"><div class="skill-fill" style="width:${v*10}%;background:${skillColor(v)};"></div></div>
+    <span class="skill-score">${v > 0 ? v.toFixed(1) : '—'}</span>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+// RESUMEN
+// ══════════════════════════════════════
+function buildResumen() {
+  const el = document.getElementById('content-resumen');
+  const loadEl = document.getElementById('loading-resumen');
+
+  if (!playerSessions.length) {
+    loadEl.style.display = 'none';
+    el.style.display = 'block';
+    el.innerHTML = '<div class="empty">No hay sesiones registradas aún.</div>';
+    return;
+  }
+
+  const last = playerSessions[playerSessions.length - 1];
+  const prev = playerSessions.length > 1 ? playerSessions[playerSessions.length - 2] : null;
+
+  const tec = num(last[COL.prom_tec]) || ((num(last[COL.drive])+num(last[COL.reves])+num(last[COL.saque])+num(last[COL.volea])+num(last[COL.resto]))/5);
+  const fis = num(last[COL.prom_fis]) || ((num(last[COL.resistencia])+num(last[COL.velocidad])+num(last[COL.agilidad]))/3);
+  const men = num(last[COL.prom_men]) || ((num(last[COL.concentracion])+num(last[COL.actitud])+num(last[COL.errores]))/3);
+  const tot = num(last[COL.prom_tot]) || ((tec+fis+men)/3);
+
+  const deltaTec = prev ? (tec - (num(prev[COL.prom_tec]) || ((num(prev[COL.drive])+num(prev[COL.reves])+num(prev[COL.saque])+num(prev[COL.volea])+num(prev[COL.resto]))/5))).toFixed(1) : null;
+  const deltaFis = prev ? (fis - (num(prev[COL.prom_fis]) || ((num(prev[COL.resistencia])+num(prev[COL.velocidad])+num(prev[COL.agilidad]))/3))).toFixed(1) : null;
+  const deltaMen = prev ? (men - (num(prev[COL.prom_men]) || ((num(prev[COL.concentracion])+num(prev[COL.actitud])+num(prev[COL.errores]))/3))).toFixed(1) : null;
+
+  const dEl = (d) => d === null ? '' : d > 0
+    ? `<span class="metric-up">↑ +${d}</span>`
+    : d < 0 ? `<span style="color:var(--red);">↓ ${d}</span>`
+    : `<span style="color:var(--hint);">= sin cambio</span>`;
 
   el.innerHTML = `
     <div class="metrics-row">
-      <div class="metric-card"><div class="metric-label">Técnica</div><div class="metric-value">${tec}</div><div class="metric-sub">${delta(tecD)} vs anterior</div></div>
-      <div class="metric-card"><div class="metric-label">Físico</div><div class="metric-value">${fis}</div><div class="metric-sub">${delta(fisD)} vs anterior</div></div>
-      <div class="metric-card"><div class="metric-label">Mental</div><div class="metric-value">${men}</div><div class="metric-sub">${delta(menD)} vs anterior</div></div>
-      <div class="metric-card"><div class="metric-label">Sesiones</div><div class="metric-value">${p.sessions.length}</div><div class="metric-sub">registradas</div></div>
-    </div>
-    <div class="two-col">
-      <div class="card">
-        <div class="card-title">Técnica</div>
-        ${skillRow('Drive',last.drive,prev.drive)}
-        ${skillRow('Revés',last.reves,prev.reves)}
-        ${skillRow('Saque',last.saque,prev.saque)}
-        ${skillRow('Volea',last.volea,prev.volea)}
-        ${skillRow('Resto',last.resto,prev.resto)}
+      <div class="metric-card">
+        <div class="metric-label">Técnica</div>
+        <div class="metric-value">${tec.toFixed(1)}</div>
+        <div class="metric-sub">${dEl(deltaTec)}</div>
       </div>
-      <div>
-        <div class="card">
-          <div class="card-title">Físico</div>
-          ${skillRow('Resistencia',last.res,prev.res)}
-          ${skillRow('Velocidad',last.vel,prev.vel)}
-          ${skillRow('Agilidad',last.agi,prev.agi)}
-        </div>
-        <div class="card">
-          <div class="card-title">Mental</div>
-          ${skillRow('Concentración',last.con,prev.con)}
-          ${skillRow('Actitud',last.act,prev.act)}
-          ${skillRow('Gestión errores',last.err,prev.err)}
-        </div>
+      <div class="metric-card">
+        <div class="metric-label">Físico</div>
+        <div class="metric-value">${fis.toFixed(1)}</div>
+        <div class="metric-sub">${dEl(deltaFis)}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Mental</div>
+        <div class="metric-value">${men.toFixed(1)}</div>
+        <div class="metric-sub">${dEl(deltaMen)}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Promedio total</div>
+        <div class="metric-value">${tot.toFixed(1)}</div>
+        <div class="metric-sub">${playerSessions.length} sesiones</div>
       </div>
     </div>
+
     <div class="card">
-      <div class="card-title">Objetivos del mes</div>
-      ${p.objs.map(o=>`
-        <div class="obj-row">
-          <span class="obj-label">${o.label}</span>
-          <div class="obj-track"><div class="obj-fill" style="width:${Math.min(100,(o.actual/o.meta)*100)}%;background:${o.actual>=o.meta?'#2d6a4f':'#3a86ff'};"></div></div>
-          <span class="obj-vals">${o.actual} / ${o.meta}</span>
-        </div>`).join('')}
+      <div class="card-title">Técnica — última sesión</div>
+      ${skillRow('Drive', last[COL.drive])}
+      ${skillRow('Revés', last[COL.reves])}
+      ${skillRow('Saque', last[COL.saque])}
+      ${skillRow('Volea', last[COL.volea])}
+      ${skillRow('Resto', last[COL.resto])}
     </div>
+
     <div class="card">
-      <div class="card-title">Último feedback del coach</div>
-      <div class="feedback-date">${new Date(last.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})}</div>
-      <div class="feedback-block">${last.feedback}</div>
-    </div>`;
+      <div class="card-title">Físico</div>
+      ${skillRow('Resistencia', last[COL.resistencia])}
+      ${skillRow('Velocidad', last[COL.velocidad])}
+      ${skillRow('Agilidad', last[COL.agilidad])}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Mental</div>
+      ${skillRow('Concentración', last[COL.concentracion])}
+      ${skillRow('Actitud', last[COL.actitud])}
+      ${skillRow('Gestión errores', last[COL.errores])}
+    </div>
+
+    ${last[COL.obs] ? `
+    <div class="card">
+      <div class="card-title">Observaciones del coach</div>
+      <div class="feedback-date">${fmtDate(last[COL.fecha])}</div>
+      <div class="feedback-block">${last[COL.obs]}</div>
+    </div>` : ''}
+  `;
+
+  loadEl.style.display = 'none';
+  el.style.display = 'block';
 }
 
-function renderProgreso(p, el) {
+// ══════════════════════════════════════
+// PROGRESO
+// ══════════════════════════════════════
+function buildProgreso() {
+  const el = document.getElementById('content-progreso');
+  const loadEl = document.getElementById('loading-progreso');
+
+  if (playerSessions.length < 2) {
+    loadEl.style.display = 'none';
+    el.style.display = 'block';
+    el.innerHTML = '<div class="empty">Necesitás al menos 2 sesiones para ver la evolución.</div>';
+    return;
+  }
+
+  const labels = playerSessions.map(s => fmtDate(s[COL.fecha]));
+
   el.innerHTML = `
     <div class="card">
       <div class="card-title">Evolución técnica</div>
-      <div class="chart-wrap"><canvas id="chart-tec" role="img" aria-label="Gráfico evolución técnica de ${p.name}">Evolución técnica por sesión.</canvas></div>
+      <div class="chart-wrap"><canvas id="chart-tec" role="img" aria-label="Evolución técnica de ${currentPlayer}">Gráfico de evolución técnica.</canvas></div>
     </div>
-    <div class="two-col">
-      <div class="card">
-        <div class="card-title">Físico</div>
-        <div class="chart-wrap" style="height:180px;"><canvas id="chart-fis" role="img" aria-label="Evolución física">Evolución física.</canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Mental</div>
-        <div class="chart-wrap" style="height:180px;"><canvas id="chart-men" role="img" aria-label="Evolución mental">Evolución mental.</canvas></div>
-      </div>
-    </div>`;
-
-  const labels = p.sessions.map(s=>new Date(s.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short'}));
-  const opts = (min,max) => ({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{color:'#7a7a72',font:{size:11},boxWidth:8,padding:10}}},scales:{y:{min,max,ticks:{stepSize:1,color:'#b0b0a8',font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}},x:{ticks:{color:'#b0b0a8',font:{size:10},autoSkip:false,maxRotation:30},grid:{color:'rgba(0,0,0,0.05)'}}}});
-
-  new Chart(document.getElementById('chart-tec'),{type:'line',data:{labels,datasets:[
-    {label:'Drive',data:p.sessions.map(s=>s.drive),borderColor:'#3a86ff',backgroundColor:'rgba(58,134,255,0.07)',tension:0.35,pointRadius:4,pointBackgroundColor:'#3a86ff'},
-    {label:'Revés',data:p.sessions.map(s=>s.reves),borderColor:'#e76f51',backgroundColor:'rgba(231,111,81,0.07)',tension:0.35,pointRadius:4,pointBackgroundColor:'#e76f51'},
-    {label:'Saque',data:p.sessions.map(s=>s.saque),borderColor:'#2d6a4f',backgroundColor:'rgba(45,106,79,0.07)',tension:0.35,pointRadius:4,pointBackgroundColor:'#2d6a4f'},
-  ]},options:opts(0,10)});
-
-  new Chart(document.getElementById('chart-fis'),{type:'line',data:{labels,datasets:[
-    {label:'Resistencia',data:p.sessions.map(s=>s.res),borderColor:'#2d6a4f',tension:0.35,pointRadius:3,pointBackgroundColor:'#2d6a4f'},
-    {label:'Velocidad',data:p.sessions.map(s=>s.vel),borderColor:'#d97706',tension:0.35,pointRadius:3,pointBackgroundColor:'#d97706'},
-    {label:'Agilidad',data:p.sessions.map(s=>s.agi),borderColor:'#6366f1',tension:0.35,pointRadius:3,pointBackgroundColor:'#6366f1'},
-  ]},options:opts(0,10)});
-
-  new Chart(document.getElementById('chart-men'),{type:'line',data:{labels,datasets:[
-    {label:'Concentración',data:p.sessions.map(s=>s.con),borderColor:'#6366f1',tension:0.35,pointRadius:3,pointBackgroundColor:'#6366f1'},
-    {label:'Actitud',data:p.sessions.map(s=>s.act),borderColor:'#db2777',tension:0.35,pointRadius:3,pointBackgroundColor:'#db2777'},
-    {label:'Gestión errores',data:p.sessions.map(s=>s.err),borderColor:'#e76f51',tension:0.35,pointRadius:3,pointBackgroundColor:'#e76f51'},
-  ]},options:opts(0,10)});
-}
-
-function renderHistorial(p, el) {
-  el.innerHTML = `<div class="card">
-    <div class="card-title">${p.sessions.length} sesiones registradas</div>
-    ${p.sessions.slice().reverse().map(s=>`
-      <div class="session-item">
-        <div class="session-dot" style="background:${s.type==='tec'?'#3a86ff':s.type==='fis'?'#2d6a4f':s.type==='par'?'#d97706':'#6366f1'};"></div>
-        <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-            ${getTypeBadge(s.type)}
-            <span class="session-date">${new Date(s.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'})}</span>
-          </div>
-          <div class="session-desc">${s.desc}</div>
-          <div class="session-scores">
-            <span class="score-tag">Drive ${s.drive}</span>
-            <span class="score-tag">Revés ${s.reves}</span>
-            <span class="score-tag">Saque ${s.saque}</span>
-            <span class="score-tag">Fís ${getAvgFis(s)}</span>
-            <span class="score-tag">Men ${getAvgMen(s)}</span>
-          </div>
-          ${s.feedback?`<div class="feedback-block" style="margin-top:8px;font-size:12px;">${s.feedback}</div>`:''}
-        </div>
-      </div>`).join('')}
-  </div>`;
-}
-
-function renderRegistrar(p, el) {
-  el.innerHTML = `<div class="card">
-    <div class="card-title">Nueva sesión — ${p.name}</div>
-    <div class="form-grid" style="margin-bottom:14px;">
-      <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" type="date" id="inp-fecha" value="${new Date().toISOString().split('T')[0]}"></div>
-      <div class="form-group"><label class="form-label">Tipo</label>
-        <select class="form-input" id="inp-tipo">
-          <option value="tec">Técnica</option>
-          <option value="fis">Física</option>
-          <option value="par">Partido</option>
-          <option value="men">Mental</option>
-        </select>
-      </div>
+    <div class="card">
+      <div class="card-title">Físico y mental</div>
+      <div class="chart-wrap"><canvas id="chart-fisment" role="img" aria-label="Evolución físico y mental">Gráfico físico y mental.</canvas></div>
     </div>
-    <div class="section-divider">Técnica</div>
-    ${['drive:Drive','reves:Revés','saque:Saque','volea:Volea','resto:Resto'].map(x=>{const[id,lbl]=x.split(':');const v=getLastSession(p)[id];return `<div class="slider-group"><span class="slider-label">${lbl}</span><div class="slider-track"><input type="range" min="1" max="10" step="1" value="${v}" id="sl-${id}" oninput="document.getElementById('out-${id}').textContent=this.value"></div><span class="slider-val" id="out-${id}">${v}</span></div>`;}).join('')}
-    <div class="section-divider">Físico</div>
-    ${['res:Resistencia','vel:Velocidad','agi:Agilidad'].map(x=>{const[id,lbl]=x.split(':');const v=getLastSession(p)[id];return `<div class="slider-group"><span class="slider-label">${lbl}</span><div class="slider-track"><input type="range" min="1" max="10" step="1" value="${v}" id="sl-${id}" oninput="document.getElementById('out-${id}').textContent=this.value"></div><span class="slider-val" id="out-${id}">${v}</span></div>`;}).join('')}
-    <div class="section-divider">Mental</div>
-    ${['con:Concentración','act:Actitud','err:Gestión errores'].map(x=>{const[id,lbl]=x.split(':');const v=getLastSession(p)[id];return `<div class="slider-group"><span class="slider-label">${lbl}</span><div class="slider-track"><input type="range" min="1" max="10" step="1" value="${v}" id="sl-${id}" oninput="document.getElementById('out-${id}').textContent=this.value"></div><span class="slider-val" id="out-${id}">${v}</span></div>`;}).join('')}
-    <div class="section-divider">Notas</div>
-    <div class="form-group" style="margin-bottom:10px;"><label class="form-label">Descripción de la sesión</label><textarea class="form-input" id="inp-desc" placeholder="Ej: Trabajo de revés cruzado bajo presión de peloteo..."></textarea></div>
-    <div class="form-group"><label class="form-label">Feedback del coach</label><textarea class="form-input" id="inp-feedback" placeholder="Ej: Excelente actitud. Seguir con la preparación temprana del revés."></textarea></div>
-    <div style="display:flex;align-items:center;margin-top:16px;">
-      <button class="save-btn" onclick="guardarSesion(${p.id})">Guardar sesión</button>
-      <span class="saved-msg" id="saved-msg">Sesión guardada</span>
+    <div class="card">
+      <div class="card-title">Promedio total por sesión</div>
+      <div class="chart-wrap" style="height:160px;"><canvas id="chart-tot" role="img" aria-label="Promedio total">Promedio total.</canvas></div>
     </div>
-  </div>`;
-}
+  `;
 
-function guardarSesion(pid) {
-  const p = players.find(x=>x.id===pid);
-  const fecha = document.getElementById('inp-fecha').value;
-  if(!fecha){ alert('Ingresá una fecha.'); return; }
-  const get = id => parseInt(document.getElementById('sl-'+id).value);
-  p.sessions.push({
-    date: fecha,
-    type: document.getElementById('inp-tipo').value,
-    desc: document.getElementById('inp-desc').value || '—',
-    feedback: document.getElementById('inp-feedback').value || '—',
-    drive:get('drive'),reves:get('reves'),saque:get('saque'),volea:get('volea'),resto:get('resto'),
-    res:get('res'),vel:get('vel'),agi:get('agi'),
-    con:get('con'),act:get('act'),err:get('err'),
+  loadEl.style.display = 'none';
+  el.style.display = 'block';
+
+  const chartOpts = (min=0,max=10) => ({
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:true,position:'bottom',labels:{color:'#7a7870',font:{size:10},boxWidth:8,padding:10}}},
+    scales:{
+      y:{min,max,ticks:{stepSize:2,color:'#b5b2a8',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},
+      x:{ticks:{color:'#b5b2a8',font:{size:10},maxRotation:40,autoSkip:true,maxTicksLimit:6},grid:{color:'rgba(0,0,0,0.04)'}}
+    }
   });
-  p.sessions.sort((a,b)=>a.date.localeCompare(b.date));
-  const msg = document.getElementById('saved-msg');
-  msg.style.display='inline';
-  setTimeout(()=>{ msg.style.display='none'; renderPlayerView('historial'); }, 1500);
+
+  charts['tec'] = new Chart(document.getElementById('chart-tec'),{
+    type:'line',
+    data:{labels, datasets:[
+      {label:'Drive',data:playerSessions.map(s=>num(s[COL.drive])||null),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,0.06)',tension:0.35,pointRadius:4,spanGaps:true},
+      {label:'Revés',data:playerSessions.map(s=>num(s[COL.reves])||null),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,0.06)',tension:0.35,pointRadius:4,spanGaps:true},
+      {label:'Saque',data:playerSessions.map(s=>num(s[COL.saque])||null),borderColor:'#2d6a4f',backgroundColor:'rgba(45,106,79,0.06)',tension:0.35,pointRadius:4,spanGaps:true},
+    ]},
+    options:chartOpts()
+  });
+
+  charts['fisment'] = new Chart(document.getElementById('chart-fisment'),{
+    type:'line',
+    data:{labels, datasets:[
+      {label:'Físico',data:playerSessions.map(s=>num(s[COL.prom_fis])||((num(s[COL.resistencia])+num(s[COL.velocidad])+num(s[COL.agilidad]))/3)||null),borderColor:'#2d6a4f',tension:0.35,pointRadius:4,spanGaps:true},
+      {label:'Mental',data:playerSessions.map(s=>num(s[COL.prom_men])||((num(s[COL.concentracion])+num(s[COL.actitud])+num(s[COL.errores]))/3)||null),borderColor:'#7c3aed',tension:0.35,pointRadius:4,spanGaps:true},
+    ]},
+    options:chartOpts()
+  });
+
+  charts['tot'] = new Chart(document.getElementById('chart-tot'),{
+    type:'bar',
+    data:{labels, datasets:[{
+      label:'Promedio total',
+      data:playerSessions.map(s=>{
+        const t=num(s[COL.prom_tot]);
+        if(t>0) return t;
+        const tec=(num(s[COL.drive])+num(s[COL.reves])+num(s[COL.saque])+num(s[COL.volea])+num(s[COL.resto]))/5;
+        const fis=(num(s[COL.resistencia])+num(s[COL.velocidad])+num(s[COL.agilidad]))/3;
+        const men=(num(s[COL.concentracion])+num(s[COL.actitud])+num(s[COL.errores]))/3;
+        return ((tec+fis+men)/3)||null;
+      }),
+      backgroundColor:playerSessions.map(s=>{
+        const t=num(s[COL.prom_tot])||0;
+        return t>=8?'rgba(45,106,79,0.7)':t>=6?'rgba(37,99,235,0.7)':'rgba(180,83,9,0.7)';
+      }),
+      borderRadius:6,
+    }]},
+    options:{...chartOpts(0,10),plugins:{legend:{display:false}}}
+  });
 }
 
-function showView(v) { if(currentPlayer) renderPlayerView('registrar'); }
+// ══════════════════════════════════════
+// HISTORIAL
+// ══════════════════════════════════════
+function buildHistorial() {
+  const el = document.getElementById('content-historial');
+  const loadEl = document.getElementById('loading-historial');
 
-buildSidebar();
-renderCoachView();
+  if (!playerSessions.length) {
+    loadEl.style.display = 'none';
+    el.style.display = 'block';
+    el.innerHTML = '<div class="empty">No hay sesiones registradas aún.</div>';
+    return;
+  }
+
+  const sessReversed = [...playerSessions].reverse();
+
+  el.innerHTML = `<div class="card">
+    <div class="card-title">${playerSessions.length} sesiones registradas</div>
+    ${sessReversed.map(s => {
+      const tec = num(s[COL.prom_tec]) || ((num(s[COL.drive])+num(s[COL.reves])+num(s[COL.saque])+num(s[COL.volea])+num(s[COL.resto]))/5);
+      const fis = num(s[COL.prom_fis]) || ((num(s[COL.resistencia])+num(s[COL.velocidad])+num(s[COL.agilidad]))/3);
+      const men = num(s[COL.prom_men]) || ((num(s[COL.concentracion])+num(s[COL.actitud])+num(s[COL.errores]))/3);
+      const dotColor = s[COL.tipo]?.toLowerCase().includes('físic') ? '#2d6a4f'
+        : s[COL.tipo]?.toLowerCase().includes('mental') ? '#7c3aed'
+        : s[COL.tipo]?.toLowerCase().includes('partido') || s[COL.tipo]?.toLowerCase().includes('torneo') ? '#b45309'
+        : '#2563eb';
+      return `<div class="session-item">
+        <div class="session-dot" style="background:${dotColor};"></div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">
+            ${typeBadge(s[COL.tipo])}
+            <span class="session-date">${fmtDate(s[COL.fecha])}</span>
+          </div>
+          <div class="session-pills">
+            ${tec>0?`<span class="session-pill">Téc ${tec.toFixed(1)}</span>`:''}
+            ${fis>0?`<span class="session-pill">Fís ${fis.toFixed(1)}</span>`:''}
+            ${men>0?`<span class="session-pill">Men ${men.toFixed(1)}</span>`:''}
+            ${num(s[COL.drive])>0?`<span class="session-pill">Drive ${num(s[COL.drive]).toFixed(0)}</span>`:''}
+            ${num(s[COL.saque])>0?`<span class="session-pill">Saque ${num(s[COL.saque]).toFixed(0)}</span>`:''}
+          </div>
+          ${s[COL.obs]?`<div class="feedback-block" style="margin-top:8px;font-size:12px;">${s[COL.obs]}</div>`:''}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  loadEl.style.display = 'none';
+  el.style.display = 'block';
+}
+
+// ══════════════════════════════════════
+// START
+// ══════════════════════════════════════
+init();
 </script>
 </body>
 </html>
