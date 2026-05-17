@@ -354,6 +354,7 @@ function selectPlayer(name) {
   currentPlayer = name;
   dateFrom = null;
   dateTo = null;
+  selectedMonth = null;
   playerSessions = allRows
     .filter(r => r[COL.alumno] === name)
     .sort((a,b) => new Date(parseDate(a[COL.fecha])) - new Date(parseDate(b[COL.fecha])));
@@ -448,36 +449,84 @@ function skillRow(name, val) {
 }
 
 // ══════════════════════════════════════
-// RESUMEN
+// HELPERS DE CÁLCULO GLOBAL
 // ══════════════════════════════════════
-// ══════════════════════════════════════
-// FILTRO DE FECHAS
-// ══════════════════════════════════════
-function applyDateFilter() {
-  const fromEl = document.getElementById('filter-from');
-  const toEl   = document.getElementById('filter-to');
-  dateFrom = fromEl?.value ? new Date(fromEl.value+'T00:00:00') : null;
-  dateTo   = toEl?.value   ? new Date(toEl.value+'T23:59:59')   : null;
+function calcTec(s){ const v=[num(s[COL.drive]),num(s[COL.reves]),num(s[COL.saque]),num(s[COL.volea]),num(s[COL.resto])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; }
+function calcFis(s){ const v=[num(s[COL.resistencia]),num(s[COL.velocidad]),num(s[COL.agilidad]),num(s[COL.fuerza])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; }
+function calcMen(s){ const v=[num(s[COL.concentracion]),num(s[COL.actitud]),num(s[COL.errores])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; }
 
-  filteredSessions = playerSessions.filter(s => {
-    const d = new Date(parseDate(s[COL.fecha])+'T12:00:00');
-    if (dateFrom && d < dateFrom) return false;
-    if (dateTo   && d > dateTo)   return false;
-    return true;
-  });
+// Promedio de un array de valores > 0
+function avg(arr){ const v=arr.filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; }
 
-  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
-  charts = {};
-  buildResumen();
-  buildProgreso();
-  buildHistorial();
+// Mes key: "2026-05"
+function monthKey(dateStr){ const d=new Date(parseDate(dateStr)+'T12:00:00'); return isNaN(d)?null:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+function monthLabel(key){ if(!key)return''; const [y,m]=key.split('-'); const names=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; return `${names[parseInt(m)-1]} ${y}`; }
+
+// Promedio mensual de una función fn sobre un array de sesiones
+function monthlyAvg(sessions, fn){
+  const map={};
+  sessions.forEach(s=>{ const k=monthKey(s[COL.fecha]); if(!k)return; if(!map[k])map[k]=[]; map[k].push(fn(s)); });
+  const result={};
+  Object.entries(map).forEach(([k,vals])=>{ result[k]=avg(vals); });
+  return result;
 }
 
-function clearDateFilter() {
-  document.getElementById('filter-from').value = '';
-  document.getElementById('filter-to').value   = '';
-  dateFrom = null; dateTo = null;
-  filteredSessions = [...playerSessions];
+// Benchmark de categoría: promedio de la última sesión de cada alumno de misma categoría (excl. actual)
+function categoryBenchmark(playerName){
+  const myInfo = getPlayerInfo(playerName);
+  const myCategoria = myInfo?.[INFO.categoria]?.trim().toLowerCase();
+  if(!myCategoria) return null;
+
+  const peers = infoRows
+    .filter(r => r[INFO.alumno]?.trim() !== playerName.trim()
+              && r[INFO.categoria]?.trim().toLowerCase() === myCategoria);
+
+  if(!peers.length) return null;
+
+  const benchTec=[], benchFis=[], benchMen=[];
+  const benchDrive=[], benchReves=[], benchSaque=[], benchVolea=[], benchResto=[];
+  const benchRes=[], benchVel=[], benchAgi=[], benchFue=[];
+  const benchCon=[], benchAct=[], benchErr=[];
+
+  peers.forEach(p=>{
+    const pName = p[INFO.alumno]?.trim();
+    const pSess = allRows.filter(r=>r[COL.alumno]===pName).sort((a,b)=>new Date(parseDate(a[COL.fecha]))-new Date(parseDate(b[COL.fecha])));
+    if(!pSess.length) return;
+    const last = pSess[pSess.length-1];
+    benchTec.push(calcTec(last)); benchFis.push(calcFis(last)); benchMen.push(calcMen(last));
+    benchDrive.push(num(last[COL.drive])); benchReves.push(num(last[COL.reves]));
+    benchSaque.push(num(last[COL.saque])); benchVolea.push(num(last[COL.volea])); benchResto.push(num(last[COL.resto]));
+    benchRes.push(num(last[COL.resistencia])); benchVel.push(num(last[COL.velocidad]));
+    benchAgi.push(num(last[COL.agilidad])); benchFue.push(num(last[COL.fuerza]));
+    benchCon.push(num(last[COL.concentracion])); benchAct.push(num(last[COL.actitud])); benchErr.push(num(last[COL.errores]));
+  });
+
+  if(!benchTec.length) return null;
+  return {
+    categoria: myInfo[INFO.categoria],
+    tec:avg(benchTec), fis:avg(benchFis), men:avg(benchMen),
+    drive:avg(benchDrive), reves:avg(benchReves), saque:avg(benchSaque), volea:avg(benchVolea), resto:avg(benchResto),
+    resistencia:avg(benchRes), velocidad:avg(benchVel), agilidad:avg(benchAgi), fuerza:avg(benchFue),
+    concentracion:avg(benchCon), actitud:avg(benchAct), errores:avg(benchErr),
+    n: peers.length
+  };
+}
+
+// ══════════════════════════════════════
+// FILTRO POR MES
+// ══════════════════════════════════════
+let selectedMonth = null; // null = todos
+
+function getAvailableMonths(){
+  const keys = [...new Set(playerSessions.map(s=>monthKey(s[COL.fecha])).filter(Boolean))].sort();
+  return keys;
+}
+
+function applyMonthFilter(month){
+  selectedMonth = month;
+  filteredSessions = month
+    ? playerSessions.filter(s => monthKey(s[COL.fecha]) === month)
+    : [...playerSessions];
   Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
   charts = {};
   buildResumen();
@@ -494,7 +543,7 @@ function buildResumen() {
   const info   = getPlayerInfo(currentPlayer);
   const sess   = filteredSessions;
 
-  // ── Ficha personal ──────────────────
+  // ── Colores de categoría ─────────────
   const catColor = (c='') => {
     const lc = c.toLowerCase();
     if (lc.includes('verde'))  return {bg:'#d8f3dc',dot:'#2d6a4f',tx:'#1a3c2a'};
@@ -505,106 +554,173 @@ function buildResumen() {
   };
   const cc = catColor(info?.[INFO.categoria]);
 
+  // ── Ficha personal ───────────────────
   const infoHTML = info ? `
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-start;">
-      ${info[INFO.brazo]   ? `<div><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Brazo hábil</div><div style="font-size:14px;font-weight:500;">${info[INFO.brazo]}</div></div>` : ''}
-      ${info[INFO.altura]  ? `<div><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Altura</div><div style="font-size:14px;font-weight:500;">${info[INFO.altura]}</div></div>` : ''}
-      ${info[INFO.edad]    ? `<div><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Edad</div><div style="font-size:14px;font-weight:500;">${info[INFO.edad]} años</div></div>` : ''}
-      ${info[INFO.categoria] ? `<div><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Categoría</div>
+      ${info[INFO.brazo]    ?`<div><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Brazo hábil</div><div style="font-size:14px;font-weight:500;">${info[INFO.brazo]}</div></div>`:''}
+      ${info[INFO.altura]   ?`<div><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Altura</div><div style="font-size:14px;font-weight:500;">${info[INFO.altura]}</div></div>`:''}
+      ${info[INFO.edad]     ?`<div><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Edad</div><div style="font-size:14px;font-weight:500;">${info[INFO.edad]} años</div></div>`:''}
+      ${info[INFO.categoria]?`<div><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Categoría</div>
         <div style="display:flex;align-items:center;gap:6px;">
           <div style="width:10px;height:10px;border-radius:50%;background:${cc.dot};flex-shrink:0;"></div>
           <span style="font-size:14px;font-weight:500;color:${cc.tx};">${info[INFO.categoria]}</span>
-        </div></div>` : ''}
-      ${info[INFO.objetivo] ? `<div style="flex-basis:100%;"><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Objetivo</div><div style="font-size:13px;color:var(--text);">${info[INFO.objetivo]}</div></div>` : ''}
+        </div></div>`:''}
+      ${info[INFO.objetivo] ?`<div style="flex-basis:100%;"><div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Objetivo</div><div style="font-size:13px;color:var(--text);">${info[INFO.objetivo]}</div></div>`:''}
     </div>` : '';
 
-  // ── Filtro de fechas ─────────────────
-  const today = new Date().toISOString().split('T')[0];
+  // ── Selector de mes ──────────────────
+  const months = getAvailableMonths();
+  const monthBtns = months.map(m=>`
+    <button onclick="applyMonthFilter('${m}')"
+      style="padding:5px 12px;font-size:12px;border-radius:99px;border:1px solid ${selectedMonth===m?'transparent':' var(--border)'};
+             background:${selectedMonth===m?'var(--court)':'var(--surface)'};
+             color:${selectedMonth===m?'white':'var(--muted)'};
+             cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s;">
+      ${monthLabel(m)}
+    </button>`).join('');
+
   const filterHTML = `
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;">
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;">Desde</label>
-        <input type="date" id="filter-from" max="${today}" style="font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none;" ${dateFrom?'value="'+dateFrom.toISOString().split('T')[0]+'"':''}>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Filtrar por mes</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button onclick="applyMonthFilter(null)"
+          style="padding:5px 12px;font-size:12px;border-radius:99px;border:1px solid ${!selectedMonth?'transparent':'var(--border)'};
+                 background:${!selectedMonth?'var(--court)':'var(--surface)'};
+                 color:${!selectedMonth?'white':'var(--muted)'};
+                 cursor:pointer;font-family:inherit;white-space:nowrap;">
+          Todos
+        </button>
+        ${monthBtns}
       </div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <label style="font-size:10px;color:var(--hint);text-transform:uppercase;letter-spacing:.05em;">Hasta</label>
-        <input type="date" id="filter-to" max="${today}" style="font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none;" ${dateTo?'value="'+dateTo.toISOString().split('T')[0]+'"':''}>
-      </div>
-      <button onclick="applyDateFilter()" style="padding:6px 14px;background:var(--court);color:white;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;">Filtrar</button>
-      ${(dateFrom||dateTo)?`<button onclick="clearDateFilter()" style="padding:6px 10px;background:none;color:var(--muted);border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer;">✕ Limpiar</button>`:''}
-      ${(dateFrom||dateTo)?`<span style="font-size:11px;color:var(--amber);align-self:center;">${sess.length} sesión${sess.length!==1?'es':''} en el período</span>`:''}
+      ${selectedMonth?`<div style="font-size:11px;color:var(--amber);margin-top:8px;">${sess.length} sesión${sess.length!==1?'es':''} en ${monthLabel(selectedMonth)}</div>`:''}
     </div>`;
 
   if (!sess.length) {
     loadEl.style.display = 'none';
     el.style.display = 'block';
-    el.innerHTML = infoHTML + filterHTML + '<div class="empty">No hay sesiones en el período seleccionado.</div>';
+    el.innerHTML = infoHTML + filterHTML + '<div class="empty">No hay sesiones en este mes.</div>';
     return;
   }
 
-  const last = sess[sess.length - 1];
-  const prev = sess.length > 1 ? sess[sess.length - 2] : null;
+  // ── Cálculos del mes actual y anterior ─
+  const currentMonthKey = selectedMonth || monthKey(sess[sess.length-1][COL.fecha]);
+  const allMonths = getAvailableMonths();
+  const prevMonthKey = allMonths[allMonths.indexOf(currentMonthKey)-1] || null;
 
-  const calcTec = s => { const v=[num(s[COL.drive]),num(s[COL.reves]),num(s[COL.saque]),num(s[COL.volea]),num(s[COL.resto])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; };
-  const calcFis = s => { const v=[num(s[COL.resistencia]),num(s[COL.velocidad]),num(s[COL.agilidad]),num(s[COL.fuerza])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; };
-  const calcMen = s => { const v=[num(s[COL.concentracion]),num(s[COL.actitud]),num(s[COL.errores])].filter(x=>x>0); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; };
+  const currentMonthSess = playerSessions.filter(s=>monthKey(s[COL.fecha])===currentMonthKey);
+  const prevMonthSess    = prevMonthKey ? playerSessions.filter(s=>monthKey(s[COL.fecha])===prevMonthKey) : [];
 
-  const tec = calcTec(last), fis = calcFis(last), men = calcMen(last);
-  const tot = [tec,fis,men].filter(v=>v>0).reduce((a,b)=>a+b,0)/[tec,fis,men].filter(v=>v>0).length;
+  const tecCurr = avg(currentMonthSess.map(calcTec));
+  const fisCurr = avg(currentMonthSess.map(calcFis));
+  const menCurr = avg(currentMonthSess.map(calcMen));
+  const totCurr = avg([tecCurr,fisCurr,menCurr].filter(v=>v>0));
 
-  const d = (curr,base) => base ? (curr-base).toFixed(1) : null;
-  const dEl = v => v===null ? '<span style="color:var(--hint);">primera sesión</span>'
-    : v>0 ? `<span class="metric-up">↑ +${v}</span>`
-    : v<0 ? `<span style="color:var(--red);">↓ ${v}</span>`
-    : `<span style="color:var(--hint);">sin cambio</span>`;
+  const tecPrev = prevMonthSess.length ? avg(prevMonthSess.map(calcTec)) : null;
+  const fisPrev = prevMonthSess.length ? avg(prevMonthSess.map(calcFis)) : null;
+  const menPrev = prevMonthSess.length ? avg(prevMonthSess.map(calcMen)) : null;
 
-  const sRow = (name, val) => {
+  // ── Benchmark de categoría ───────────
+  const bench = categoryBenchmark(currentPlayer);
+
+  const monthDelta = (curr, prev) => {
+    if(prev===null) return `<span style="color:var(--hint);font-size:10px;">sin mes anterior</span>`;
+    const d = (curr-prev).toFixed(1);
+    const label = `vs ${monthLabel(prevMonthKey)}`;
+    if(d>0) return `<span class="metric-up" style="font-size:10px;">↑ +${d} ${label}</span>`;
+    if(d<0) return `<span style="color:var(--red);font-size:10px;">↓ ${d} ${label}</span>`;
+    return `<span style="color:var(--hint);font-size:10px;">= igual ${label}</span>`;
+  };
+
+  // ── Barra con benchmark ──────────────
+  const sRowBench = (name, val, benchVal) => {
     const v = num(val);
-    return `<div class="skill-row">
-      <span class="skill-name" style="width:88px;">${name}</span>
-      <div class="skill-track"><div class="skill-fill" style="width:${v>0?v*10:0}%;background:${skillColor(v)};"></div></div>
-      <span class="skill-score">${v>0?v.toFixed(1):'—'}</span>
+    const b = benchVal ? parseFloat(benchVal.toFixed(1)) : null;
+    const bPct = b ? Math.min(100,b*10) : 0;
+    const diff = b ? (v-b).toFixed(1) : null;
+    const diffEl = diff===null ? ''
+      : diff>0 ? `<span style="font-size:10px;color:var(--green);margin-left:4px;">+${diff}</span>`
+      : diff<0 ? `<span style="font-size:10px;color:var(--red);margin-left:4px;">${diff}</span>`
+      : `<span style="font-size:10px;color:var(--hint);margin-left:4px;">=</span>`;
+    return `<div class="skill-row" style="margin-bottom:12px;flex-direction:column;align-items:stretch;gap:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:var(--text);">${name}</span>
+        <div style="display:flex;align-items:center;">
+          <span style="font-size:13px;font-family:'DM Mono',monospace;font-weight:500;color:var(--text);">${v>0?v.toFixed(1):'—'}</span>
+          ${diffEl}
+        </div>
+      </div>
+      <div style="position:relative;height:8px;background:var(--surface2);border-radius:99px;overflow:visible;">
+        <div style="height:100%;width:${v>0?v*10:0}%;background:${skillColor(v)};border-radius:99px;transition:width .7s cubic-bezier(.34,1.2,.64,1);"></div>
+        ${b?`<div style="position:absolute;top:-3px;left:${bPct}%;width:2px;height:14px;background:var(--hint);border-radius:2px;transform:translateX(-50%);" title="Promedio cat. ${bench.categoria}: ${b}"></div>`:''}
+      </div>
+      ${b?`<div style="font-size:10px;color:var(--hint);">— Categoría ${bench.categoria}: ${b}</div>`:''}
     </div>`;
   };
 
+  // ── Última sesión para las barras ────
+  const last = sess[sess.length-1];
+
   el.innerHTML = infoHTML + filterHTML + `
-    <div class="metrics-row">
-      <div class="metric-card"><div class="metric-label">Técnica</div><div class="metric-value">${tec.toFixed(1)}</div><div class="metric-sub">${dEl(d(tec,prev?calcTec(prev):null))}</div></div>
-      <div class="metric-card"><div class="metric-label">Físico</div><div class="metric-value">${fis.toFixed(1)}</div><div class="metric-sub">${dEl(d(fis,prev?calcFis(prev):null))}</div></div>
-      <div class="metric-card"><div class="metric-label">Mental</div><div class="metric-value">${men.toFixed(1)}</div><div class="metric-sub">${dEl(d(men,prev?calcMen(prev):null))}</div></div>
-      <div class="metric-card"><div class="metric-label">Promedio total</div><div class="metric-value">${tot.toFixed(1)}</div><div class="metric-sub">${sess.length} sesiones</div></div>
+
+    <div class="metrics-row" style="margin-bottom:14px;">
+      <div class="metric-card">
+        <div class="metric-label">Técnica</div>
+        <div class="metric-value">${tecCurr.toFixed(1)}</div>
+        <div class="metric-sub">${monthDelta(tecCurr,tecPrev)}</div>
+        ${bench?`<div style="font-size:10px;color:var(--hint);margin-top:4px;">Cat.: ${bench.tec.toFixed(1)}</div>`:''}
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Físico</div>
+        <div class="metric-value">${fisCurr.toFixed(1)}</div>
+        <div class="metric-sub">${monthDelta(fisCurr,fisPrev)}</div>
+        ${bench?`<div style="font-size:10px;color:var(--hint);margin-top:4px;">Cat.: ${bench.fis.toFixed(1)}</div>`:''}
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Mental</div>
+        <div class="metric-value">${menCurr.toFixed(1)}</div>
+        <div class="metric-sub">${monthDelta(menCurr,menPrev)}</div>
+        ${bench?`<div style="font-size:10px;color:var(--hint);margin-top:4px;">Cat.: ${bench.men.toFixed(1)}</div>`:''}
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Promedio total</div>
+        <div class="metric-value">${totCurr.toFixed(1)}</div>
+        <div class="metric-sub" style="font-size:10px;">${monthLabel(currentMonthKey)} · ${currentMonthSess.length} ses.</div>
+      </div>
     </div>
+
+    ${bench?`<div style="font-size:11px;color:var(--hint);background:var(--surface2);border-radius:8px;padding:7px 10px;margin-bottom:14px;">
+      La línea <span style="color:var(--muted);font-weight:500;">|</span> en cada barra indica el promedio de la categoría ${bench.categoria} (${bench.n} jugador${bench.n!==1?'es':''}).
+    </div>`:''}
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
       <div class="card" style="margin-bottom:0;">
         <div class="card-title">Técnica</div>
-        ${sRow('Drive',last[COL.drive])}
-        ${sRow('Revés',last[COL.reves])}
-        ${sRow('Saque',last[COL.saque])}
-        ${sRow('Volea',last[COL.volea])}
-        ${sRow('Resto',last[COL.resto])}
+        ${sRowBench('Drive',   last[COL.drive],   bench?.drive)}
+        ${sRowBench('Revés',   last[COL.reves],   bench?.reves)}
+        ${sRowBench('Saque',   last[COL.saque],   bench?.saque)}
+        ${sRowBench('Volea',   last[COL.volea],   bench?.volea)}
+        ${sRowBench('Resto',   last[COL.resto],   bench?.resto)}
       </div>
       <div>
         <div class="card" style="margin-bottom:12px;">
           <div class="card-title">Físico</div>
-          ${sRow('Resistencia',last[COL.resistencia])}
-          ${sRow('Velocidad',last[COL.velocidad])}
-          ${sRow('Agilidad',last[COL.agilidad])}
-          ${sRow('Fuerza',last[COL.fuerza])}
+          ${sRowBench('Resistencia', last[COL.resistencia], bench?.resistencia)}
+          ${sRowBench('Velocidad',   last[COL.velocidad],   bench?.velocidad)}
+          ${sRowBench('Agilidad',    last[COL.agilidad],    bench?.agilidad)}
+          ${sRowBench('Fuerza',      last[COL.fuerza],      bench?.fuerza)}
         </div>
         <div class="card" style="margin-bottom:0;">
           <div class="card-title">Mental</div>
-          ${sRow('Concentración',last[COL.concentracion])}
-          ${sRow('Actitud',last[COL.actitud])}
-          ${sRow('Gest. errores',last[COL.errores])}
+          ${sRowBench('Concentración', last[COL.concentracion], bench?.concentracion)}
+          ${sRowBench('Actitud',       last[COL.actitud],       bench?.actitud)}
+          ${sRowBench('Gest. errores', last[COL.errores],       bench?.errores)}
         </div>
       </div>
     </div>
 
     <div style="font-size:10px;color:var(--hint);text-align:right;margin-bottom:14px;">Última sesión: ${fmtDate(last[COL.fecha])}</div>
-
     ${last[COL.descripcion]?`<div class="card"><div class="card-title">Descripción de la sesión</div><div class="feedback-block">${last[COL.descripcion]}</div></div>`:''}
-    ${last[COL.obs_profe]?`<div class="card"><div class="card-title">Observación del coach</div><div class="feedback-block" style="border-color:var(--ball);">${last[COL.obs_profe]}</div></div>`:''}
+    ${last[COL.obs_profe]  ?`<div class="card"><div class="card-title">Observación del coach</div><div class="feedback-block" style="border-color:var(--ball);">${last[COL.obs_profe]}</div></div>`:''}
   `;
 
   loadEl.style.display = 'none';
